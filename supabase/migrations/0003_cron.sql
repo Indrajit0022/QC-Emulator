@@ -11,6 +11,11 @@
 --   -- the LLM credential, read by the worker via public.get_secret().
 --   select vault.create_secret('<OPENROUTER_API_KEY>', 'openrouter_api_key');
 --
+--   -- optional: pin the model. Without it the worker falls back to the
+--   -- DEFAULT_MODEL in openrouter-client.ts. Setting it here means the model
+--   -- can be swapped when OpenRouter rotates its free lineup, with no redeploy:
+--   select vault.create_secret('<MODEL_ID>', 'openrouter_model');
+--
 -- Replace <PROJECT_REF> in the URL below with your Supabase project ref.
 --
 -- pg_cron and pg_net are both available on the free tier.

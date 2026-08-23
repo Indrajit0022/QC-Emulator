@@ -17,10 +17,11 @@ export async function callOpenRouterForJson<T>(
   // Optional override. Supplied by the worker when the key lives in Vault
   // rather than in an Edge Function secret (see resolveOpenRouterKey).
   apiKeyOverride?: string,
+  modelOverride?: string,
 ): Promise<{ data: T; model: string }> {
   const apiKey = apiKeyOverride ?? Deno.env.get("OPENROUTER_API_KEY");
   if (!apiKey) throw new OpenRouterError("OPENROUTER_API_KEY is not set");
-  const model = Deno.env.get("OPENROUTER_MODEL") ?? DEFAULT_MODEL;
+  const model = modelOverride ?? Deno.env.get("OPENROUTER_MODEL") ?? DEFAULT_MODEL;
 
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",

@@ -1,15 +1,15 @@
 // supabase/functions/process-run/index.ts
 //
-// Invoked every ~10s by pg_cron (see supabase/migrations/0002_cron.sql).
+// Invoked every ~10s by pg_cron (see supabase/migrations/0003_cron.sql).
 // Claims exactly ONE run and advances it exactly ONE stage, then returns.
 // This keeps every invocation short (well under the 150s free-tier Edge
 // Function timeout) even though a full run passes through 7 stages and one
 // slow free-tier LLM call.
 //
 // Deploy: supabase functions deploy process-run
-// Secrets needed: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (Supabase sets
-// these automatically for Edge Functions), OPENROUTER_API_KEY,
-// OPENROUTER_MODEL (optional).
+// SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically.
+// The OpenRouter credential and model id come from either an Edge Function
+// secret or Postgres Vault — see resolveOpenRouterConfig below.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { loadRubric } from "../_shared/rubric-loader.ts";
@@ -25,20 +25,25 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
-// The OpenRouter key can live in either place:
-//   1. an Edge Function secret (OPENROUTER_API_KEY), or
-//   2. Postgres Vault under the name 'openrouter_api_key'.
-// The Vault path exists because it can be provisioned entirely over SQL,
-// without dashboard/CLI access to Edge Function secrets.
-async function resolveOpenRouterKey(): Promise<string | undefined> {
-  const fromEnv = Deno.env.get("OPENROUTER_API_KEY");
-  if (fromEnv) return fromEnv;
-
-  const { data, error } = await supabase.rpc("get_secret", {
-    secret_name: "openrouter_api_key",
-  });
+async function vaultSecret(name: string): Promise<string | undefined> {
+  const { data, error } = await supabase.rpc("get_secret", { secret_name: name });
   if (error) return undefined;
   return (data as string | null) ?? undefined;
+}
+
+// Both the credential and the model id can come from an Edge Function secret
+// or, failing that, Postgres Vault. The Vault path can be provisioned purely
+// over SQL, so the free-tier model can be swapped without a redeploy when
+// OpenRouter rotates its free lineup.
+async function resolveOpenRouterConfig(): Promise<{
+  apiKey: string | undefined;
+  model: string | undefined;
+}> {
+  const apiKey = Deno.env.get("OPENROUTER_API_KEY") ??
+    (await vaultSecret("openrouter_api_key"));
+  const model = Deno.env.get("OPENROUTER_MODEL") ??
+    (await vaultSecret("openrouter_model"));
+  return { apiKey, model };
 }
 
 interface ModelResponseShape {
@@ -102,11 +107,12 @@ Deno.serve(async (_req) => {
         const turns = parseTranscript(run.transcript);
         const prompt = buildEvaluationPrompt(rubric, turns);
 
-        const apiKey = await resolveOpenRouterKey();
+        const cfg = await resolveOpenRouterConfig();
         const { data, model } = await callOpenRouterForJson<ModelResponseShape>(
           prompt,
           buildResponseSchema(rubric),
-          apiKey,
+          cfg.apiKey,
+          cfg.model,
         );
 
         const validated = validateDimensionEvidence(data.dimensions, turns);
