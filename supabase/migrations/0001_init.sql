@@ -60,7 +60,10 @@ create table if not exists public.evaluation_dimensions (
 -- keep updated_at fresh
 -- ---------------------------------------------------------------------------
 create or replace function public.set_updated_at()
-returns trigger language plpgsql as $$
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
 begin
   new.updated_at = now();
   return new;
@@ -79,6 +82,7 @@ create trigger runs_set_updated_at
 create or replace function public.claim_next_run()
 returns public.runs
 language plpgsql
+set search_path = public, pg_temp
 as $$
 declare
   claimed public.runs;
