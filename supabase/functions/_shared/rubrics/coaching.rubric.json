@@ -1,0 +1,16 @@
+{
+  "_TODO": "Placeholder. Replace with the real 12 dimensions, caps, and grade bands from coaching-call-rubric.md. Shape must match RubricConfig in ../types.ts.",
+  "call_type": "coaching",
+  "dimensions": [
+    {
+      "key": "active_listening",
+      "name": "Active Listening",
+      "max_score": 10,
+      "description": "Did the coach demonstrate active listening (reflecting, paraphrasing, following up on what the client said) rather than steering to a pre-set agenda?"
+    }
+  ],
+  "max_score": 10,
+  "grade_bands": [
+    { "min": 0, "max": 10, "grade": "PLACEHOLDER - replace with real bands" }
+  ]
+}

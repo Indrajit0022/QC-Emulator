@@ -1,0 +1,16 @@
+{
+  "_TODO": "Placeholder. Replace with the real 12 dimensions, caps, and grade bands from kickoff-call-rubric.md. Shape must match RubricConfig in ../types.ts.",
+  "call_type": "kickoff",
+  "dimensions": [
+    {
+      "key": "goal_clarity",
+      "name": "Goal Clarity",
+      "max_score": 10,
+      "description": "Did the coach establish a clear, specific goal for the engagement and explore why it matters to the client?"
+    }
+  ],
+  "max_score": 10,
+  "grade_bands": [
+    { "min": 0, "max": 10, "grade": "PLACEHOLDER - replace with real bands" }
+  ]
+}
