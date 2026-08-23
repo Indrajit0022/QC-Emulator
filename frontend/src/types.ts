@@ -36,6 +36,7 @@ export interface FinalReport {
   brief: string;
   red_flags: string[];
   evidence_coverage: string;
+  caps_applied: string[];
 }
 
 export interface RunRow {

@@ -14,11 +14,11 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { loadRubric } from "../_shared/rubric-loader.ts";
 import { parseTranscript } from "../_shared/transcript-parser.ts";
-import { buildEvaluationPrompt, RESPONSE_SCHEMA } from "../_shared/prompt-builder.ts";
+import { buildEvaluationPrompt, buildResponseSchema } from "../_shared/prompt-builder.ts";
 import { callOpenRouterForJson } from "../_shared/openrouter-client.ts";
 import { validateDimensionEvidence, stripInvalidEvidence } from "../_shared/evidence-validator.ts";
 import { applyRubricRules, evidenceCoverage } from "../_shared/rubric-engine.ts";
-import type { RawDimensionResult, RunRow } from "../_shared/types.ts";
+import type { GlobalFlagResult, RawDimensionResult, RunRow } from "../_shared/types.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -27,6 +27,7 @@ const supabase = createClient(
 
 interface ModelResponseShape {
   dimensions: RawDimensionResult[];
+  global_flags: GlobalFlagResult[];
   brief: string;
   red_flags: string[];
   one_thing: string;
@@ -87,7 +88,7 @@ Deno.serve(async (_req) => {
 
         const { data, model } = await callOpenRouterForJson<ModelResponseShape>(
           prompt,
-          RESPONSE_SCHEMA,
+          buildResponseSchema(rubric),
         );
 
         const validated = validateDimensionEvidence(data.dimensions, turns);
@@ -101,7 +102,13 @@ Deno.serve(async (_req) => {
           .update({
             model,
             report: {
-              _draft: { dimensions: cleaned, brief: data.brief, red_flags: data.red_flags, one_thing: data.one_thing },
+              _draft: {
+                dimensions: cleaned,
+                global_flags: data.global_flags,
+                brief: data.brief,
+                red_flags: data.red_flags,
+                one_thing: data.one_thing,
+              },
             },
           })
           .eq("id", run.id);
@@ -119,11 +126,17 @@ Deno.serve(async (_req) => {
           .single();
 
         const draft = fresh?.report?._draft as
-          | { dimensions: RawDimensionResult[]; brief: string; red_flags: string[]; one_thing: string }
+          | {
+              dimensions: RawDimensionResult[];
+              global_flags: GlobalFlagResult[];
+              brief: string;
+              red_flags: string[];
+              one_thing: string;
+            }
           | undefined;
         if (!draft) throw new Error("Missing scored dimensions before applying rubric rules.");
 
-        const rules = applyRubricRules(draft.dimensions, rubric);
+        const rules = applyRubricRules(draft.dimensions, draft.global_flags ?? [], rubric);
 
         // Persist the dimension rows (PRD §20's evaluation_dimensions table).
         const rows = rules.dimensions.map((d) => ({
@@ -149,7 +162,12 @@ Deno.serve(async (_req) => {
             grade: rules.grade,
             report: {
               _draft: draft, // still needed by building_report
-              _rules: { totalScore: rules.totalScore, maxScore: rules.maxScore, grade: rules.grade },
+              _rules: {
+                totalScore: rules.totalScore,
+                maxScore: rules.maxScore,
+                grade: rules.grade,
+                capsApplied: rules.capsApplied,
+              },
             },
           })
           .eq("id", run.id);
@@ -167,6 +185,9 @@ Deno.serve(async (_req) => {
 
         const draft = fresh?.report?._draft as
           | { brief: string; red_flags: string[]; one_thing: string; dimensions: RawDimensionResult[] }
+          | undefined;
+        const rulesResult = fresh?.report?._rules as
+          | { capsApplied: string[] }
           | undefined;
         if (!draft) throw new Error("Missing draft report before building final report.");
 
@@ -191,6 +212,7 @@ Deno.serve(async (_req) => {
           brief: draft.brief,
           red_flags: draft.red_flags,
           evidence_coverage: coverage,
+          caps_applied: rulesResult?.capsApplied ?? [],
         };
 
         await supabase

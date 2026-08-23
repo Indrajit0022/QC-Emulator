@@ -69,6 +69,7 @@ export interface FinalReport {
   brief: string;
   red_flags: string[];
   evidence_coverage: string; // e.g. "9/12"
+  caps_applied: string[]; // human-readable record of which global caps fired, per rubric instructions
 }
 
 // -----------------------------------------------------------------------
@@ -81,25 +82,45 @@ export interface RubricDimension {
   name: string;
   max_score: number;
   description: string; // what the model should look for, fed into the prompt
-  cap?: {
-    // optional deterministic cap: "if dimension X scores <= threshold,
-    // total score cannot exceed capValue"
-    condition: "dimension_at_or_below";
-    dimensionKey: string;
-    threshold: number;
-    capValue: number;
-  };
+  // Optional dimensions (e.g. coaching D4 "movement coaching" — not every
+  // call has movement coaching) can be marked inapplicable by the model.
+  // When redistributable=true, an inapplicable dimension's points are
+  // excluded from BOTH numerator and denominator (score becomes "out of
+  // max_score minus this dimension") rather than scored 0 — matches rubric
+  // language like "redistribute weight, do not penalize the coach."
+  // MVP simplification: points are excluded, not literally redistributed
+  // to other named dimensions (the rubric doesn't specify exact weights).
+  redistributable?: boolean;
+}
+
+// A cap that applies to the RUN TOTAL based on a call-wide condition that
+// isn't reducible to a single dimension's score (e.g. "coach speaks >70% of
+// the call" or "no follow-up questions anywhere"). The model reports
+// whether each condition held (see GlobalFlagResult); the deterministic
+// engine — not the model — decides whether/how to apply the cap.
+export interface GlobalCap {
+  key: string; // must match the key the model returns in global_flags
+  prompt_description: string; // fed into the prompt so the model knows what to detect
+  cap_value: number; // PERCENTAGE (0-100) the final normalized score cannot exceed if the flag is true
+}
+
+export interface GlobalFlagResult {
+  key: string;
+  present: boolean;
+  reasoning: string;
 }
 
 export interface GradeBand {
-  min: number; // inclusive, as a fraction 0-1 of max_score, or absolute — pick one and be consistent
-  max: number;
+  min: number; // inclusive, PERCENTAGE (0-100) — final scores are always normalized to /100, see rubric-engine.ts
+  max: number; // inclusive, PERCENTAGE (0-100)
   grade: string;
 }
 
 export interface RubricConfig {
   call_type: CallType;
+  scoring_notes: string; // call-type-level scoring philosophy/instructions injected into the prompt
   dimensions: RubricDimension[];
-  max_score: number; // sum of all dimension max_scores
+  global_caps: GlobalCap[];
+  max_score: number; // sum of all (non-redistributable) dimension max_scores — informational; run totals are normalized to /100 regardless (see rubric-engine.ts)
   grade_bands: GradeBand[];
 }

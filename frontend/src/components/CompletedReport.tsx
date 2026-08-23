@@ -60,6 +60,18 @@ export default function CompletedReport({
           <p className="text-xs text-muted">
             Evidence coverage: {report.evidence_coverage}
           </p>
+
+          {report.caps_applied.length > 0 && (
+            <Section title="Rubric caps applied">
+              <ul className="list-disc list-inside space-y-1">
+                {report.caps_applied.map((c, i) => (
+                  <li key={i} className="text-sm text-ink">
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
         </div>
       )}
 

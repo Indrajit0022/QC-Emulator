@@ -1,16 +1,103 @@
 {
-  "_TODO": "Placeholder. Replace with the real 12 dimensions, caps, and grade bands from kickoff-call-rubric.md. Shape must match RubricConfig in ../types.ts.",
   "call_type": "kickoff",
+  "scoring_notes": "Band-based scoring: each dimension's score must fall inside one of its listed bands. Pick any value within the band (or a half-step where the dimension's max is 5 or less) based on how close the call sits to the next band up. A call that clearly exceeds the Mid criteria but does not fully meet Elite belongs in the Strong band, not Mid — rounding down to Mid needs a stated reason. Every rationale must begin with a direct or paraphrased reference to something that actually happened in the transcript — never score from general impressions. If a behaviour cannot be verified, score conservatively WITHIN the band the call otherwise belongs to (the lower tier of that band); this is not a license to collapse into a lower band entirely. Before finalizing each score, ask whether the client would leave feeling: (1) 'this coach gets me', (2) 'I know exactly what to do next', (3) 'I trust this process', (4) 'I'm excited to start' — not merely 'that was informative'. If it doesn't land with the client, it cannot score Elite. The most common correction reviewers make is collapsing a borderline-but-clearly-above-Mid call into the Mid bucket — the Strong band exists precisely for calls that exceed Mid without fully meeting Elite. Check every score against this before finalizing. Scope: D7 (support system clarity) and D12 (post-call execution) are scored on what is communicated during the call, not on whether the follow-up actually landed afterwards.",
   "dimensions": [
     {
-      "key": "goal_clarity",
-      "name": "Goal Clarity",
+      "key": "pre_call_preparation",
+      "name": "Pre-Call Preparation",
       "max_score": 10,
-      "description": "Did the coach establish a clear, specific goal for the engagement and explore why it matters to the client?"
+      "description": "Score CONDUCT, not disclosure: credit preparation whenever the coach naturally uses specific details from the sales notes (goals, name, injuries, history) even without ever saying 'I read your notes.' Bands: 9-10 Elite = goals/name/injuries referenced within the first 2 minutes, uses >=2 specific CRM/notes details naturally, no repetition. 6-8 Strong = clear content-level prep evidence with one small gap (e.g. a minor factual slip like the wrong city, or a slightly delayed reference, or one redundant question) - a single misstep in an otherwise-solid opening stays in this band, it does NOT drop to Mid. 4-5 Mid = partial preparation, several redundant questions, generic low-personalization intro, notes read mechanically - reserve for visibly thin prep, not for solid prep the coach simply didn't announce. 1-3 Weak = minimal, one or two surface references at most, client does most of the context-setting. 0 Fail = coach asks the client's name or 'what brought you here', completely resets the sale. Do NOT default to Mid just because the coach never explicitly announces having read the notes - the conduct is the test, not the disclosure. A client voluntarily sharing context for relational warmth is not a deduction."
+    },
+    {
+      "key": "rapport_and_tone",
+      "name": "Rapport & Tone",
+      "max_score": 10,
+      "description": "10 Elite = warm, calm, personalized, matches client energy, uses the client's name organically, shares something personal and relevant, client opens up spontaneously with personal stories. 7 Strong = friendly but surface-level, good connection with little emotional mirroring or depth. 3 Mid = mechanical/scripted feel, friendly but transactional, light conversation without real connection. 0 Fail = cold, rushed, transactional, skips rapport entirely, no attempt at personal connection, client gives monosyllabic answers."
+    },
+    {
+      "key": "agenda_framing",
+      "name": "Agenda Framing",
+      "max_score": 5,
+      "description": "Numbered enumeration is NOT required - a sequenced delivery covering at least 3 distinct phases (e.g. 'first... then... and finally...', or a natural comma-and-connected list) paired with explicit time framing and at least implicit client buy-in counts as fully structured. 4.5-5 Elite = explicit time framing AND >=3 sequenced phases (numbered or natural language) AND client verbal consent ('sounds good'); score 5 when all three are crisp, 4.5 when present but slightly informal in delivery. 2.5-3.5 Mid = agenda mentioned but partial - time framing missing, fewer than 3 phases, or no client buy-in. 1-2 Weak = brief or fragmented mention, no sequencing or framing. 0 Fail = no upfront structure, client has no sense of where the call is going. Calibration: 'we've got 30 minutes - connect, get aligned on your goals, what success looks like, walk you through the journey, get clear on support, and schedule the next call' is Elite-level (4.5-5), NOT Mid - natural-language sequencing with time framing counts fully even without numbers."
+    },
+    {
+      "key": "goal_alignment_deep_why",
+      "name": "Goal Alignment & Deep Why",
+      "max_score": 15,
+      "description": "Auto-cap: if no North Star statement is constructed anywhere in the call, this dimension cannot exceed 10/15 regardless of other qualities. 15 Elite = extracts the emotional/identity driver (fear, family, legacy, career, self-image) via >=2 follow-up 'why' questions, builds an explicit North Star statement ('What I hear you saying is you want to be the active husband and father you envision for decades to come'), defines a specific 30-day success metric, and the client verbally confirms ('Yes, that's exactly it'). 10 Strong = understands goals but stays surface-level, 1 follow-up plus some emotional context, 30-day goal vague or not established, North Star implied but not solidified. 5 Mid = mostly repeats the sales notes, asks 'what are your goals?' and accepts the first answer, stays physical-only ('lose weight', 'more flexible'), no probing or emotional depth. 0 Fail = no meaningful alignment, reads from sales notes without engagement, accepts a generic answer ('I want to be healthy') and moves on. This is historically the #1 loss dimension - most coaches visit the goal but never strengthen the connection to a North Star."
+    },
+    {
+      "key": "program_explanation_3_phases",
+      "name": "Program Explanation (3 Phases)",
+      "max_score": 10,
+      "description": "Halden Method canon: (1) Movement Retraining - restore foundational movement quality, address asymmetries; (2) Movement Remodeling - load and rebuild new patterns into strength; (3) Movement Integrating - integrate full-capacity movement into life and sport. Accept ANY phrasing that conveys the same three-stage progression in correct order (e.g. Reset/Baseline -> Build/Strength -> Freedom/Mastery, or 'rebuild the foundation -> load the pattern -> free movement') - naming variant, including using the canonical Retraining/Remodeling/Integrating labels, is NEVER itself a deduction. 9-10 Elite = all 3 phases clearly named (any equivalent phrasing) with outcomes for each, uses an analogy (pyramid, mountain, ladder) or a reassessment cadence (week 4/8/12/16), each phase tied to the client's specific goal, high belief transfer. 6-8 Strong = all 3 phases identified in correct order but delivery is simple/generic, or analogy/cadence is missing, or the coach never checks client understanding. 3-5 Mid = fragmented, 1-2 phases mentioned vaguely or the progression is only implied, not laid out in sequence. 1-2 Weak = only vague references to 'phases' or 'steps' without naming or sequencing. 0 Fail = no phase explanation at all, just 'we'll do mobility exercises.'"
+    },
+    {
+      "key": "journey_expectation_setting",
+      "name": "Journey & Expectation Setting",
+      "max_score": 10,
+      "description": "10 Elite = explains milestones/timeline/challenges, explicitly normalizes emotional friction ('There will be a week where you feel like you're not progressing - that's normal'), explains the week 3-4 valley, distinguishes good discomfort from bad pain, explains that month 1 is foundational not transformational, and links back to the North Star. 7 Strong = covers timeline/structure but misses emotional prep, normalizes physical discomfort only, missing psychological preparation for valleys. 3 Mid = vague, informative but not experiential, explains what will happen but not how it will feel, sounds instructional not like coaching. 0 Fail = no expectation setting at all, leaves the client with unrealistic expectations, never mentions there will be hard moments. Historically the #2 loss dimension - coaches explain the timeline but never normalize emotional friction, so clients hit week 3-4 unprepared and disengage."
+    },
+    {
+      "key": "support_system_clarity",
+      "name": "Support System Clarity",
+      "max_score": 5,
+      "description": "Scores ONLY what is communicated in this call - the training-app message history is not required to score it. 5 Elite = primary support channel explicitly named ('the training app is our main channel for daily check-ins'), response time stated ('I respond within 24h'), community platform/access mentioned, accountability style asked or framed ('Do you want me to push you, or to stay in the background?'). 3 Mid = support mentioned but unclear usage - channel named without response times, vague 'reach out anytime' without structure, no accountability framing. 0 Fail = not explained at all - no channel named, no response-time expectations."
+    },
+    {
+      "key": "coaching_intelligence_questions",
+      "name": "Coaching Intelligence Questions",
+      "max_score": 10,
+      "description": "10 Elite = asks behavioral-pattern questions ('What has stopped you in the past?'), probes consistency triggers ('What usually throws you off a program?'), asks learning style ('do you need to be pushed or supported?'), asks about stress response, and USES the answers to personalize the coaching approach - identifies archetype signals (Doer = confident/data-driven, wants the how; Controller = pushes back, needs proof; Worrier = seeks reassurance, asks 'what if'; Follower = enthusiastic but vague goals, history of not following through). 7 Strong = asks 1-2 questions but lacks depth (pain triggers, schedule, training style) and doesn't use the answers to adapt. 3 Mid = generic logistics-only questions (frequency, equipment, availability). 0 Fail = skipped entirely - only 'when are you available?' / 'do you have equipment?' - client not truly known."
+    },
+    {
+      "key": "next_steps_diagnostics",
+      "name": "Next Steps & Diagnostics",
+      "max_score": 10,
+      "description": "10 Elite = clear confident pipeline explained (diagnostics -> film -> upload -> program -> start date), explains how to film videos (angle/device), removes confusion via a demo or screen-share, a specific time is given ('send by Saturday, program Monday'), and the client verbally confirms understanding. 7 Strong = clear instructions but no demo, timeline slightly rushed, minor ambiguity but overall strong clarity. 3 Mid = vague instructions, partially clear with gaps, client has unresolved doubts, no specific timeline. 0 Fail = no clear next steps, 'I'll send you some stuff' without explanation, client doesn't know what to do after the call. Historically the #3 loss dimension - 'I'll send you some stuff' is the single most expensive sentence in coaching; vague next steps lose clients in the hand-off."
+    },
+    {
+      "key": "booking_next_call",
+      "name": "Booking Next Call",
+      "max_score": 5,
+      "description": "Booking is verbal, not technical - the substantive test is verbal confirmation of date and time during the call. Whether the calendar invite is technically clicked on-screen during the call versus immediately after is an artifact of the recording, NOT a deduction. 4.5-5 Elite = date and time confirmed verbally during the call, coach navigates scheduling constraints live (time zones, weekly availability, conflicts); score 5 when booking is crisp and the coach proactively closes it, 4.5 when confirmed but slightly rushed or with minor ambiguity. 2.5-3.5 Mid = attempted but not fully secured - coach raises booking but leaves excessive flexibility ('I'll send you a link', 'we'll organize via message') instead of locking date+time live. 1-2 Weak = booking referenced only in passing with no concrete attempt to lock it. 0 Fail = not addressed at all, call ends without any mention of the next call. Calibration: if date and time are confirmed verbally and any scheduling friction is resolved live, score 5/5 even if the transcript never explicitly confirms the calendar invite was sent during the recording."
+    },
+    {
+      "key": "close_recap_confidence",
+      "name": "Close, Recap & Confidence",
+      "max_score": 5,
+      "description": "Cap: if there is no structured recap at all anywhere in the close, this dimension cannot exceed 3 - missing a structured recap is the single most universal gap across coaches, present even in elite 90+ overall calls. 5 Elite = structured recap ('Here's what we covered today: X, Y, Z'), a confidence anchor ('You're in the right place' / 'You're exactly the type of person who succeeds here'), emotional reinforcement/excitement, does NOT end with only logistics. 3 Mid = basic close, positive but no structured recap, generic encouragement without an emotional anchor, or a flat close ('Ok, talk soon'), ends with next steps logistically only. 0 Fail = abrupt or unclear ending, call ends in a disappointing or flat way, client leaves without feeling excited."
+    },
+    {
+      "key": "post_call_execution",
+      "name": "Post-Call Execution",
+      "max_score": 5,
+      "description": "Scores ONLY what is committed to in-call - verification of actual post-call delivery is out of scope for this evaluation. Informal commitments still count: a specific commitment with implied or rough timing ('I'll get your diagnostics done over the weekend') is a real promise and belongs in the Mid band, not Fail - reserve Fail only for a call with zero commitment at all. 4.5-5 Elite = multiple explicit post-call commitments with precise deadlines (recap timing, diagnostics assigned live, program delivery date), all time-bound; score 5 for 3+ commitments with crisp timing, 4.5 for 2+ with precise timing. 3.5-4 Strong = two or more commitments with mostly precise timing, minor gaps. 2-3 Mid = at least one specific commitment but timing is rough, or only one-two commitments, including informal-but-real ones like 'I'll get diagnostics done over the weekend.' 1 Weak = vague reference to follow-up ('I'll send you stuff') without a specific deliverable or timing. 0 Fail = no post-call commitments stated at all, call ends with no clarity on what the coach will do next."
     }
   ],
-  "max_score": 10,
+  "global_caps": [
+    {
+      "key": "no_follow_up_questions",
+      "prompt_description": "No follow-up questions were asked anywhere in the entire call - the coach never asked a single question that built on something the client had just said.",
+      "cap_value": 70
+    },
+    {
+      "key": "coach_dominates_talktime",
+      "prompt_description": "The coach spoke more than approximately 70% of the call's total talk time, with minimal client engagement (client mostly gave short acknowledgements rather than substantive contributions).",
+      "cap_value": 80
+    },
+    {
+      "key": "unresolved_confusion",
+      "prompt_description": "The client showed clear confusion at some point in the call (asked a clarifying question, expressed not understanding something, or stated uncertainty) and that confusion was never clearly resolved before the call moved on.",
+      "cap_value": 75
+    }
+  ],
+  "max_score": 100,
   "grade_bands": [
-    { "min": 0, "max": 10, "grade": "PLACEHOLDER - replace with real bands" }
+    { "min": 90, "max": 100, "grade": "Elite" },
+    { "min": 80, "max": 89, "grade": "Strong" },
+    { "min": 70, "max": 79, "grade": "Inconsistent" },
+    { "min": 60, "max": 69, "grade": "At Risk" },
+    { "min": 0, "max": 59, "grade": "Fail" }
   ]
 }

@@ -14,18 +14,18 @@ supabase/migrations/0002_cron.sql     pg_cron job that ticks the worker
 supabase/functions/process-run/       the step-machine worker (one stage per invocation)
 supabase/functions/_shared/           parsing, prompt, OpenRouter client, evidence
                                        validation, deterministic rubric engine
-rubrics/                              drop the real rubric .md files here (see rubrics/README.md)
+rubrics/                              real rubric .md source + conversion notes (see rubrics/README.md)
 frontend/src/                         Home → run creation → live processing view →
                                        completed report → client-side PDF
 ```
 
-This is real logic, not stubs — the pieces that are genuinely placeholders
-(clearly marked `_TODO` / `PLACEHOLDER`) are the two rubric JSON files under
-`supabase/functions/_shared/rubrics/`, because the actual 12 dimensions,
-caps, and grade bands haven't been provided yet. Everything else — parsing,
-the LLM prompt, evidence validation, the rules engine, the step machine, the
-frontend — works with those placeholders today and just needs the real
-rubric dropped in.
+The rubric JSON files under `supabase/functions/_shared/rubrics/` now
+contain the real 12 dimensions, global caps, and grade bands converted from
+`rubrics/kickoff-call-rubric.md` and `rubrics/coaching-call-rubric.md` — see
+`rubrics/README.md` for one important note on how run totals are normalized
+to a `/100` scale (the source docs' own per-dimension point values don't
+quite sum to the "100 points" they state as the headline total — worth a
+quick look, not a blocker).
 
 ## Why the architecture looks like this
 
@@ -59,9 +59,11 @@ npx supabase db push
 ```
 
 ### 3. Rubrics
-Drop `kickoff-call-rubric.md` / `coaching-call-rubric.md` into `/rubrics`,
-convert each into `supabase/functions/_shared/rubrics/{kickoff,coaching}.rubric.json`
-per `rubrics/README.md`.
+Already converted — `supabase/functions/_shared/rubrics/{kickoff,coaching}.rubric.json`
+have the real 12 dimensions each. Read `rubrics/README.md` before relying on
+the totals: run-level scores are normalized to `/100`, and there's a small
+point-value inconsistency in the source docs worth confirming with whoever
+owns the rubric.
 
 ### 4. Edge Function secrets
 ```bash
