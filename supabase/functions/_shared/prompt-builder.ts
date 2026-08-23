@@ -54,7 +54,7 @@ export function buildResponseSchema(rubric: RubricConfig) {
       global_flags: {
         type: "array",
         description:
-          "One entry for EVERY global condition listed under 'Global Automatic Score Caps' — report whether each condition held, regardless of whether it changes the outcome.",
+          "One entry for EVERY global condition listed under 'GLOBAL CONDITIONS TO CHECK' — report whether each condition held, regardless of whether it changes the outcome.",
         items: {
           type: "object",
           properties: {

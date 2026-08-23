@@ -25,6 +25,22 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+// The OpenRouter key can live in either place:
+//   1. an Edge Function secret (OPENROUTER_API_KEY), or
+//   2. Postgres Vault under the name 'openrouter_api_key'.
+// The Vault path exists because it can be provisioned entirely over SQL,
+// without dashboard/CLI access to Edge Function secrets.
+async function resolveOpenRouterKey(): Promise<string | undefined> {
+  const fromEnv = Deno.env.get("OPENROUTER_API_KEY");
+  if (fromEnv) return fromEnv;
+
+  const { data, error } = await supabase.rpc("get_secret", {
+    secret_name: "openrouter_api_key",
+  });
+  if (error) return undefined;
+  return (data as string | null) ?? undefined;
+}
+
 interface ModelResponseShape {
   dimensions: RawDimensionResult[];
   global_flags: GlobalFlagResult[];
@@ -86,9 +102,11 @@ Deno.serve(async (_req) => {
         const turns = parseTranscript(run.transcript);
         const prompt = buildEvaluationPrompt(rubric, turns);
 
+        const apiKey = await resolveOpenRouterKey();
         const { data, model } = await callOpenRouterForJson<ModelResponseShape>(
           prompt,
           buildResponseSchema(rubric),
+          apiKey,
         );
 
         const validated = validateDimensionEvidence(data.dimensions, turns);

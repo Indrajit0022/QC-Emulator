@@ -14,8 +14,11 @@ export class OpenRouterError extends Error {}
 export async function callOpenRouterForJson<T>(
   prompt: BuiltPrompt,
   schema: Record<string, unknown>,
+  // Optional override. Supplied by the worker when the key lives in Vault
+  // rather than in an Edge Function secret (see resolveOpenRouterKey).
+  apiKeyOverride?: string,
 ): Promise<{ data: T; model: string }> {
-  const apiKey = Deno.env.get("OPENROUTER_API_KEY");
+  const apiKey = apiKeyOverride ?? Deno.env.get("OPENROUTER_API_KEY");
   if (!apiKey) throw new OpenRouterError("OPENROUTER_API_KEY is not set");
   const model = Deno.env.get("OPENROUTER_MODEL") ?? DEFAULT_MODEL;
 

@@ -10,7 +10,8 @@ Stack: React/Vite/TS/Tailwind → Supabase (Postgres + Edge Functions + Realtime
 
 ```
 supabase/migrations/0001_init.sql     schema, RLS, claim_next_run(), Realtime
-supabase/migrations/0002_cron.sql     pg_cron job that ticks the worker
+supabase/migrations/0002_secret_reader.sql  get_secret(): lets the worker read Vault
+supabase/migrations/0003_cron.sql     pg_cron job that ticks the worker
 supabase/functions/process-run/       the step-machine worker (one stage per invocation)
 supabase/functions/_shared/           parsing, prompt, OpenRouter client, evidence
                                        validation, deterministic rubric engine
@@ -26,6 +27,26 @@ contain the real 12 dimensions, global caps, and grade bands converted from
 to a `/100` scale (the source docs' own per-dimension point values don't
 quite sum to the "100 points" they state as the headline total — worth a
 quick look, not a blocker).
+
+## Live deployment
+
+| Piece | Where |
+|---|---|
+| App | https://call-eval-system-indrajit0022s-projects.vercel.app |
+| Supabase project ref | `tyjbfyxlpoefqezbjwfy` (region `ap-south-1`, free tier) |
+| Worker | Edge Function `process-run`, ticked every 10s by `pg_cron` |
+
+The frontend reads `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` at build
+time. The anon key is public by design — RLS (migration 0001) is what
+protects the data: anonymous clients may insert a run and read runs and
+dimensions, and nothing else. Every write to `status`, `report`, scores, and
+dimension rows happens server-side under the service role, inside the Edge
+Function.
+
+The OpenRouter key is never in this repo and never reaches the browser. The
+worker resolves it from either the `OPENROUTER_API_KEY` Edge Function secret
+or, failing that, Postgres Vault via `public.get_secret()` (migration 0002),
+which only `service_role` may execute.
 
 ## Why the architecture looks like this
 
