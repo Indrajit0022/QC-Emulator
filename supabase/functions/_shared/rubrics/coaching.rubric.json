@@ -6,75 +6,160 @@
       "key": "checkin_connection",
       "name": "Check-In & Connection",
       "max_score": 10,
-      "description": "Pillar: CONNECTION. 10 Elite = coach asks about body, wins, AND struggles; listens before responding (no interruption); reflects back what they hear ('What I'm hearing is...'); states a clear call intention tied to the client's actual state; reads what kind of call is needed today and adjusts accordingly. 7 Strong = good questions but limited depth, reflects but not fully, call intention stated but generic ('let's keep making progress on your goals'). 3 Surface = surface-level 'How's it going?', doesn't reflect, moves to program topics within 30 seconds, no call intention stated. 0 Fail = skips check-in entirely or rushes through, no acknowledgment of the client's state, launches directly into program content. The check-in's real purpose is gauging what kind of call this person needs today - the framework is a container, not a script; if a client hops on in tears, the framework gets put away and the coach meets them where they are (that IS the framework working, not a deviation from it)."
+      "description": "Pillar: CONNECTION. 10 Elite = coach asks about body, wins, AND struggles; listens before responding (no interruption); reflects back what they hear ('What I'm hearing is...'); states a clear call intention tied to the client's actual state; reads what kind of call is needed today and adjusts accordingly. 7 Strong = good questions but limited depth, reflects but not fully, call intention stated but generic ('let's keep making progress on your goals'). 3 Surface = surface-level 'How's it going?', doesn't reflect, moves to program topics within 30 seconds, no call intention stated. 0 Fail = skips check-in entirely or rushes through, no acknowledgment of the client's state, launches directly into program content. The check-in's real purpose is gauging what kind of call this person needs today - the framework is a container, not a script; if a client hops on in tears, the framework gets put away and the coach meets them where they are (that IS the framework working, not a deviation from it).",
+      "buckets": [
+        0,
+        3,
+        7,
+        10
+      ]
     },
     {
       "key": "diagnostics_review",
       "name": "Diagnostics Review",
       "max_score": 10,
       "redistributable": true,
-      "description": "Pillar: VALUE. Only fully applicable at diagnostic milestone weeks (8, 16, 24). If diagnostics are not applicable this cycle (non-milestone call, no video submitted), mark applicable:false - do not penalize the coach for a call where diagnostics simply weren't due. 10 Elite = screen-shares only 1-2 movements (per SOP, not more), makes specific anatomically precise observations, directly ties findings to the client's stated pain points/goals ('See how your hips shift here? That's why we're building ___'), client clearly understands the connection. 7 Strong = good observations but not fully tied to goals, expertise shown but context-linking incomplete. 3 Surface = generic feedback ('Good effort, keep your back straight'), no tie to client goals, possibly reviews too many movements. 0 Fail = skipped, rushed, unclear, feedback generic or absent."
+      "description": "Pillar: VALUE. Only fully applicable at diagnostic milestone weeks (8, 16, 24). If diagnostics are not applicable this cycle (non-milestone call, no video submitted), mark applicable:false - do not penalize the coach for a call where diagnostics simply weren't due. 10 Elite = screen-shares only 1-2 movements (per SOP, not more), makes specific anatomically precise observations, directly ties findings to the client's stated pain points/goals ('See how your hips shift here? That's why we're building ___'), client clearly understands the connection. 7 Strong = good observations but not fully tied to goals, expertise shown but context-linking incomplete. 3 Surface = generic feedback ('Good effort, keep your back straight'), no tie to client goals, possibly reviews too many movements. 0 Fail = skipped, rushed, unclear, feedback generic or absent.",
+      "buckets": [
+        0,
+        3,
+        7,
+        10
+      ]
     },
     {
       "key": "program_focus_vision",
       "name": "Program Focus + Vision",
       "max_score": 15,
-      "description": "Pillar: EMOTION - Belief + Long-Term Buy-In. Auto-cap: if there is no connection to the client's long-term vision anywhere in the call, this dimension cannot exceed 10/15. 15 Elite = clearly explains what the current training block targets (e.g. baseline strength, mobility, metabolic capacity), explicitly connects this phase to the client's 12-month vision BY NAME, reinforces the Halden Method difference ('We build from your diagnostics and goals - not random workouts'), client responds with belief or insight - client leaves understanding not just WHAT but WHY this specific block, at this specific time, is the path to their specific goal. 10 Strong = block explained and connected to goals but the vision tie is generic ('this builds toward your long-term health'), emotional resonance present but not sharp. 5 Mid = vague, block explained as logistics only, client understands what to do this week but not why it matters long-term, no 12-month vision referenced. 0 Fail = no explanation of the block at all, just 'keep doing your workouts', no connection to vision. Historically the #1 loss dimension in coaching QC - coaches explain the program but forget to build belief in the journey. Elite coaches also use vision as a reset tool for an upset client: returning to 'when you started, what were the most important things to you?' and rebuilding vision from there."
+      "description": "Pillar: EMOTION - Belief + Long-Term Buy-In. Auto-cap: if there is no connection to the client's long-term vision anywhere in the call, this dimension cannot exceed 10/15. 15 Elite = clearly explains what the current training block targets (e.g. baseline strength, mobility, metabolic capacity), explicitly connects this phase to the client's 12-month vision BY NAME, reinforces the Halden Method difference ('We build from your diagnostics and goals - not random workouts'), client responds with belief or insight - client leaves understanding not just WHAT but WHY this specific block, at this specific time, is the path to their specific goal. 10 Strong = block explained and connected to goals but the vision tie is generic ('this builds toward your long-term health'), emotional resonance present but not sharp. 5 Mid = vague, block explained as logistics only, client understands what to do this week but not why it matters long-term, no 12-month vision referenced. 0 Fail = no explanation of the block at all, just 'keep doing your workouts', no connection to vision. Historically the #1 loss dimension in coaching QC - coaches explain the program but forget to build belief in the journey. Elite coaches also use vision as a reset tool for an upset client: returning to 'when you started, what were the most important things to you?' and rebuilding vision from there.",
+      "dimension_cap": {
+        "flag_key": "no_vision_link",
+        "prompt_description": "No connection to the client's long-term vision was made at any point in the call.",
+        "cap_value": 10
+      },
+      "buckets": [
+        0,
+        5,
+        10,
+        15
+      ]
     },
     {
       "key": "movement_coaching_quality",
       "name": "Movement Coaching Quality",
       "max_score": 15,
       "redistributable": true,
-      "description": "Pillar: SUPPORT - Real Coaching, Not Commentary. OPTIONAL - disable (mark applicable:false, score:0) ONLY if ALL of the following are absent: (1) client performed any live movement during the call, (2) coach gave setup/breathing/control cues in response to a movement, (3) there was a video review of a recorded movement attempt with real-time feedback, (4) coach gave real-time form correction while the client moved. If even ONE of these is present, score normally. 15 Elite = reviews 1-2 movements live, gives specific cues (setup, breathing, control), asks reflective questions ('Where do you feel this most?' / 'What felt hardest here?'), improvement is observable or the client verbally confirms new understanding, links back to goal ('This is what's moving you toward ___'), redirects a 'talker' client toward live movement rather than letting the call become pure conversation. 10 Strong = clear coaching and relevant cues but missing reflective questions or a goal link, client engaged but no breakthrough or redirection of a talker dynamic. 5 Mid = mostly telling ('Keep your back straight, squeeze your glutes'), no reflective questions, no back-and-forth exchange. 0 Fail = no live coaching at all, just commentary or 'looks fine', client is a passive observer. Historically the #3 loss dimension - coaches narrate instead of coaching; without live exchange, reflective questions, and a goal link, the call becomes commentary, not real coaching."
+      "description": "Pillar: SUPPORT - Real Coaching, Not Commentary. OPTIONAL - disable (mark applicable:false, score:0) ONLY if ALL of the following are absent: (1) client performed any live movement during the call, (2) coach gave setup/breathing/control cues in response to a movement, (3) there was a video review of a recorded movement attempt with real-time feedback, (4) coach gave real-time form correction while the client moved. If even ONE of these is present, score normally. 15 Elite = reviews 1-2 movements live, gives specific cues (setup, breathing, control), asks reflective questions ('Where do you feel this most?' / 'What felt hardest here?'), improvement is observable or the client verbally confirms new understanding, links back to goal ('This is what's moving you toward ___'), redirects a 'talker' client toward live movement rather than letting the call become pure conversation. 10 Strong = clear coaching and relevant cues but missing reflective questions or a goal link, client engaged but no breakthrough or redirection of a talker dynamic. 5 Mid = mostly telling ('Keep your back straight, squeeze your glutes'), no reflective questions, no back-and-forth exchange. 0 Fail = no live coaching at all, just commentary or 'looks fine', client is a passive observer. Historically the #3 loss dimension - coaches narrate instead of coaching; without live exchange, reflective questions, and a goal link, the call becomes commentary, not real coaching.",
+      "buckets": [
+        0,
+        5,
+        10,
+        15
+      ]
     },
     {
       "key": "adjustments_strategy",
       "name": "Adjustments & Strategy",
       "max_score": 10,
-      "description": "Pillar: GOALS - Adaptability + Confidence. If no adjustments were needed this cycle, score 7/10 by default - strategic awareness is still visible in how the coach communicates program status; this is NOT a penalty situation. 10 Elite = adjustments (training or lifestyle) explained with clear rationale tied to the client's long game, explicitly framed as protection and strategy ('We're adapting - not backing off. This protects the long game'), client leaves feeling smarter and more confident, not discouraged. 7 Strong = adjustments made and explained, framing present but brief, client doesn't feel discouraged but isn't fully empowered. 3 Surface = adjustments made without clear rationale, client accepts changes but doesn't understand why, subtle discouragement possible. 0 Fail = reactive unexplained changes, client confused or mildly demoralized, no protective framing applied."
+      "description": "Pillar: GOALS - Adaptability + Confidence. If no adjustments were needed this cycle, score 7/10 by default - strategic awareness is still visible in how the coach communicates program status; this is NOT a penalty situation. 10 Elite = adjustments (training or lifestyle) explained with clear rationale tied to the client's long game, explicitly framed as protection and strategy ('We're adapting - not backing off. This protects the long game'), client leaves feeling smarter and more confident, not discouraged. 7 Strong = adjustments made and explained, framing present but brief, client doesn't feel discouraged but isn't fully empowered. 3 Surface = adjustments made without clear rationale, client accepts changes but doesn't understand why, subtle discouragement possible. 0 Fail = reactive unexplained changes, client confused or mildly demoralized, no protective framing applied.",
+      "buckets": [
+        0,
+        3,
+        7,
+        10
+      ]
     },
     {
       "key": "action_steps_accountability",
       "name": "Action Steps & Accountability",
       "max_score": 15,
-      "description": "Pillar: JOURNEY - Clarity + Ownership. Auto-cap: if there is no concrete accountability commitment the client owns before close - no specific, verifiable deliverable the client confirms - this dimension cannot exceed 10/15. A single named anchor OR a progression-gated ask ('send me your X video(s) before I progress you', client confirms) both satisfy this and do NOT trigger the cap. 15 Elite = coach states their own commitment out loud ('I'll get you feedback on ___ by ___'), client commitments are specific ('Film ___ by ___' / 'Complete ___ daily'), client owns a weekly theme in their own words, coach creates a micro-commitment if the client is slipping, both sides know exactly what's expected. 10 Strong = clear commitments but lacking specific deadlines or measurability, or one side more accountable than the other. 5 Mid = vague action steps ('Do your workouts,' 'Let me know how it goes'), no deadline, no specific task, no verbal ownership. 0 Fail = no clear next steps for either party, call ends without accountability. Historically the #2 loss dimension - most coaches say 'great, keep it up' instead of creating owned commitments on both sides."
+      "description": "Pillar: JOURNEY - Clarity + Ownership. Auto-cap: if there is no concrete accountability commitment the client owns before close - no specific, verifiable deliverable the client confirms - this dimension cannot exceed 10/15. A single named anchor OR a progression-gated ask ('send me your X video(s) before I progress you', client confirms) both satisfy this and do NOT trigger the cap. 15 Elite = coach states their own commitment out loud ('I'll get you feedback on ___ by ___'), client commitments are specific ('Film ___ by ___' / 'Complete ___ daily'), client owns a weekly theme in their own words, coach creates a micro-commitment if the client is slipping, both sides know exactly what's expected. 10 Strong = clear commitments but lacking specific deadlines or measurability, or one side more accountable than the other. 5 Mid = vague action steps ('Do your workouts,' 'Let me know how it goes'), no deadline, no specific task, no verbal ownership. 0 Fail = no clear next steps for either party, call ends without accountability. Historically the #2 loss dimension - most coaches say 'great, keep it up' instead of creating owned commitments on both sides.",
+      "dimension_cap": {
+        "flag_key": "no_owned_commitment",
+        "prompt_description": "No concrete accountability commitment the client owns before close - no specific, verifiable deliverable the client confirms. A single named anchor OR a progression-gated ask the client confirms both COUNT as present, so the condition is false in those cases.",
+        "cap_value": 10
+      },
+      "buckets": [
+        0,
+        5,
+        10,
+        15
+      ]
     },
     {
       "key": "accountability_anchor",
       "name": "Accountability Anchor",
       "max_score": 5,
-      "description": "Pillar: JOURNEY - Single-Point Focus. 5 Elite = a clear accountability commitment the client owns and verbally confirms, gated to the coach's next action (program adjustment, feedback) - a real chain of consequence. Either form qualifies: (a) one explicitly-named anchor task ('Send me your ___ video by Thursday - that's your accountability task this week'), or (b) a specific, verifiable deliverable the client must submit before the coach progresses them, even if several items are listed, as long as what's owed and its consequence are clear and confirmed. Time-bound is satisfied by a hard date OR a session-relative deadline ('before our next call', 'over the next two weeks before I progress you') - do NOT downgrade purely because it was framed as a set of items or used a window instead of a single date. 3 Mid = accountability gestured at but NOT clearly gated to a coach action/consequence - tasks listed with equal weight and no clear 'what this unlocks'. 0 Fail = no accountability anchor at all - multiple vague tasks or nothing."
+      "description": "Pillar: JOURNEY - Single-Point Focus. 5 Elite = a clear accountability commitment the client owns and verbally confirms, gated to the coach's next action (program adjustment, feedback) - a real chain of consequence. Either form qualifies: (a) one explicitly-named anchor task ('Send me your ___ video by Thursday - that's your accountability task this week'), or (b) a specific, verifiable deliverable the client must submit before the coach progresses them, even if several items are listed, as long as what's owed and its consequence are clear and confirmed. Time-bound is satisfied by a hard date OR a session-relative deadline ('before our next call', 'over the next two weeks before I progress you') - do NOT downgrade purely because it was framed as a set of items or used a window instead of a single date. 3 Mid = accountability gestured at but NOT clearly gated to a coach action/consequence - tasks listed with equal weight and no clear 'what this unlocks'. 0 Fail = no accountability anchor at all - multiple vague tasks or nothing.",
+      "buckets": [
+        0,
+        3,
+        5
+      ]
     },
     {
       "key": "struggle_handling",
       "name": "Struggle Handling",
       "max_score": 5,
-      "description": "Pillar: CONNECTION + CONFIDENCE. If NO struggle is present in this call, score 5/5 by default - do not penalize a smooth call. Auto-cap: if a client struggle IS present but ignored, minimized, avoided, or the coach becomes defensive, this is 0/5, non-recoverable. 5 Elite = coach does not defend, prove, or take the struggle personally, stays grounded and fact-based, asks questions to get to the core before offering solutions, pre-frames if the client is upset, reconnects to their original 'why', reframes ('We do not stop - we shift'), goes full circle back to where the call started emotionally, offers options and commits to one with a timeline. 3 Mid = acknowledges struggle and offers some support, asks some questions but doesn't fully coach through or reconnect to why, brief/surface-level reassurance."
+      "description": "Pillar: CONNECTION + CONFIDENCE. If NO struggle is present in this call, score 5/5 by default - do not penalize a smooth call. Auto-cap: if a client struggle IS present but ignored, minimized, avoided, or the coach becomes defensive, this is 0/5, non-recoverable. 5 Elite = coach does not defend, prove, or take the struggle personally, stays grounded and fact-based, asks questions to get to the core before offering solutions, pre-frames if the client is upset, reconnects to their original 'why', reframes ('We do not stop - we shift'), goes full circle back to where the call started emotionally, offers options and commits to one with a timeline. 3 Mid = acknowledges struggle and offers some support, asks some questions but doesn't fully coach through or reconnect to why, brief/surface-level reassurance.",
+      "dimension_cap": {
+        "flag_key": "struggle_ignored",
+        "prompt_description": "A client struggle was present in the call but was ignored, minimised, avoided, or met defensively.",
+        "cap_value": 0
+      },
+      "buckets": [
+        0,
+        3,
+        5
+      ]
     },
     {
       "key": "close_quality",
       "name": "Close Quality",
       "max_score": 5,
-      "description": "Pillar: CONFIDENCE. 5 Elite = celebrates a specific, named piece of progress from THIS call ('The way you pushed through ___ shows you're building ___'), reiterates direction ('This block leads directly into your ___ milestone'), warm earned close, client leaves energized not just satisfied. 3 Mid = positive close with some specificity but generic celebration ('You're doing great') or a flat close without direction, client leaves satisfied but not energized. 0 Fail = abrupt end, client leaves without emotional reinforcement or directional clarity. A written post-call breakdown sent via Slack/video tool is a bonus extension, not a substitute for the in-call close - the in-call close must still land on its own. Historically the #4 loss dimension - no emotional reinforcement at the close, common even in otherwise-strong coaches."
+      "description": "Pillar: CONFIDENCE. 5 Elite = celebrates a specific, named piece of progress from THIS call ('The way you pushed through ___ shows you're building ___'), reiterates direction ('This block leads directly into your ___ milestone'), warm earned close, client leaves energized not just satisfied. 3 Mid = positive close with some specificity but generic celebration ('You're doing great') or a flat close without direction, client leaves satisfied but not energized. 0 Fail = abrupt end, client leaves without emotional reinforcement or directional clarity. A written post-call breakdown sent via Slack/video tool is a bonus extension, not a substitute for the in-call close - the in-call close must still land on its own. Historically the #4 loss dimension - no emotional reinforcement at the close, common even in otherwise-strong coaches.",
+      "buckets": [
+        0,
+        3,
+        5
+      ]
     },
     {
       "key": "next_call_booking",
       "name": "Next Call Booking",
       "max_score": 5,
-      "description": "Pillar: CONTINUITY. Non-negotiable - booked live on the call or not, no partial credit. 5 Elite = booking link shared live, client books during the call, date confirmed verbally ('I see you booked for ___. We're locked in'), happens before the close. 0 Fail = not booked, call ends without the next call locked in live - automatic 0, non-recoverable, regardless of how good the rest of the call was or how little time remained."
+      "description": "Pillar: CONTINUITY. Non-negotiable - booked live on the call or not, no partial credit. 5 Elite = booking link shared live, client books during the call, date confirmed verbally ('I see you booked for ___. We're locked in'), happens before the close. 0 Fail = not booked, call ends without the next call locked in live - automatic 0, non-recoverable, regardless of how good the rest of the call was or how little time remained.",
+      "dimension_cap": {
+        "flag_key": "not_booked_live",
+        "prompt_description": "The next call was not booked live during this call.",
+        "cap_value": 0
+      },
+      "buckets": [
+        0,
+        5
+      ]
     },
     {
       "key": "continuity_followup_clarity",
       "name": "Continuity & Follow-Up Clarity",
       "max_score": 5,
-      "description": "Pillar: CONTINUITY. Scored ONLY on the in-call statement of the coach's own follow-up - whether they actually deliver it afterward cannot be verified from the transcript and is out of scope. 5 Elite = coach restates the accountability anchor explicitly and states their own follow-up with specific timing ('Once you send ___, I'll get you feedback by ___'), client could answer 'what happens next?' without hesitation, the chain is clear: client does X by Y -> coach delivers Z by W. 3 Mid = follow-up mentioned but vague timing ('I'll send you feedback this week'), anchor partially restated, client unsure exactly what to expect. 0 Fail = no post-call structure at all, call ends with zero continuity visible."
+      "description": "Pillar: CONTINUITY. Scored ONLY on the in-call statement of the coach's own follow-up - whether they actually deliver it afterward cannot be verified from the transcript and is out of scope. 5 Elite = coach restates the accountability anchor explicitly and states their own follow-up with specific timing ('Once you send ___, I'll get you feedback by ___'), client could answer 'what happens next?' without hesitation, the chain is clear: client does X by Y -> coach delivers Z by W. 3 Mid = follow-up mentioned but vague timing ('I'll send you feedback this week'), anchor partially restated, client unsure exactly what to expect. 0 Fail = no post-call structure at all, call ends with zero continuity visible.",
+      "buckets": [
+        0,
+        3,
+        5
+      ]
     },
     {
       "key": "structure_time_management",
       "name": "Structure & Time Management",
       "max_score": 5,
-      "description": "Pillar: FLOW. Target duration ~25-30 min; more time on Diagnostics Review and Program Focus is expected at milestone weeks (8, 16, 24) - pacing should be evaluated relative to call type. 5 Elite = call flows naturally through all applicable SOP sections, pacing smooth (not rushed, not padded), close and booking don't feel rushed, client never confused about where the call is going, the framework is woven in rather than announced. 3 Mid = slightly uneven pacing, most sections covered, one section rushed/bloated or compressed under 30 seconds. 0 Fail = disorganized, core sections missing, flow unclear to an observer and probably to the client. Robotic section announcements ('Okay, now I'm in the check-in section...') are a MID signal, not Elite - Elite coaches weave the framework in naturally without narrating it."
+      "description": "Pillar: FLOW. Target duration ~25-30 min; more time on Diagnostics Review and Program Focus is expected at milestone weeks (8, 16, 24) - pacing should be evaluated relative to call type. 5 Elite = call flows naturally through all applicable SOP sections, pacing smooth (not rushed, not padded), close and booking don't feel rushed, client never confused about where the call is going, the framework is woven in rather than announced. 3 Mid = slightly uneven pacing, most sections covered, one section rushed/bloated or compressed under 30 seconds. 0 Fail = disorganized, core sections missing, flow unclear to an observer and probably to the client. Robotic section announcements ('Okay, now I'm in the check-in section...') are a MID signal, not Elite - Elite coaches weave the framework in naturally without narrating it.",
+      "buckets": [
+        0,
+        3,
+        5
+      ]
     }
   ],
   "global_caps": [
@@ -91,10 +176,30 @@
   ],
   "max_score": 105,
   "grade_bands": [
-    { "min": 90, "max": 100, "grade": "Elite" },
-    { "min": 80, "max": 89, "grade": "Strong" },
-    { "min": 70, "max": 79, "grade": "Inconsistent" },
-    { "min": 60, "max": 69, "grade": "At Risk" },
-    { "min": 0, "max": 59, "grade": "Fail" }
+    {
+      "min": 90,
+      "max": 100,
+      "grade": "Elite"
+    },
+    {
+      "min": 80,
+      "max": 89,
+      "grade": "Strong"
+    },
+    {
+      "min": 70,
+      "max": 79,
+      "grade": "Inconsistent"
+    },
+    {
+      "min": 60,
+      "max": 69,
+      "grade": "At Risk"
+    },
+    {
+      "min": 0,
+      "max": 59,
+      "grade": "Fail"
+    }
   ]
 }

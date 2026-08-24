@@ -24,7 +24,12 @@
       "key": "goal_alignment_deep_why",
       "name": "Goal Alignment & Deep Why",
       "max_score": 15,
-      "description": "Auto-cap: if no North Star statement is constructed anywhere in the call, this dimension cannot exceed 10/15 regardless of other qualities. 15 Elite = extracts the emotional/identity driver (fear, family, legacy, career, self-image) via >=2 follow-up 'why' questions, builds an explicit North Star statement ('What I hear you saying is you want to be the active husband and father you envision for decades to come'), defines a specific 30-day success metric, and the client verbally confirms ('Yes, that's exactly it'). 10 Strong = understands goals but stays surface-level, 1 follow-up plus some emotional context, 30-day goal vague or not established, North Star implied but not solidified. 5 Mid = mostly repeats the sales notes, asks 'what are your goals?' and accepts the first answer, stays physical-only ('lose weight', 'more flexible'), no probing or emotional depth. 0 Fail = no meaningful alignment, reads from sales notes without engagement, accepts a generic answer ('I want to be healthy') and moves on. This is historically the #1 loss dimension - most coaches visit the goal but never strengthen the connection to a North Star."
+      "description": "Auto-cap: if no North Star statement is constructed anywhere in the call, this dimension cannot exceed 10/15 regardless of other qualities. 15 Elite = extracts the emotional/identity driver (fear, family, legacy, career, self-image) via >=2 follow-up 'why' questions, builds an explicit North Star statement ('What I hear you saying is you want to be the active husband and father you envision for decades to come'), defines a specific 30-day success metric, and the client verbally confirms ('Yes, that's exactly it'). 10 Strong = understands goals but stays surface-level, 1 follow-up plus some emotional context, 30-day goal vague or not established, North Star implied but not solidified. 5 Mid = mostly repeats the sales notes, asks 'what are your goals?' and accepts the first answer, stays physical-only ('lose weight', 'more flexible'), no probing or emotional depth. 0 Fail = no meaningful alignment, reads from sales notes without engagement, accepts a generic answer ('I want to be healthy') and moves on. This is historically the #1 loss dimension - most coaches visit the goal but never strengthen the connection to a North Star.",
+      "dimension_cap": {
+        "flag_key": "no_north_star",
+        "prompt_description": "No North Star statement was constructed anywhere in the call (the coach never reflected the client's deeper why back as an explicit statement).",
+        "cap_value": 10
+      }
     },
     {
       "key": "program_explanation_3_phases",
@@ -66,7 +71,12 @@
       "key": "close_recap_confidence",
       "name": "Close, Recap & Confidence",
       "max_score": 5,
-      "description": "Cap: if there is no structured recap at all anywhere in the close, this dimension cannot exceed 3 - missing a structured recap is the single most universal gap across coaches, present even in elite 90+ overall calls. 5 Elite = structured recap ('Here's what we covered today: X, Y, Z'), a confidence anchor ('You're in the right place' / 'You're exactly the type of person who succeeds here'), emotional reinforcement/excitement, does NOT end with only logistics. 3 Mid = basic close, positive but no structured recap, generic encouragement without an emotional anchor, or a flat close ('Ok, talk soon'), ends with next steps logistically only. 0 Fail = abrupt or unclear ending, call ends in a disappointing or flat way, client leaves without feeling excited."
+      "description": "Cap: if there is no structured recap at all anywhere in the close, this dimension cannot exceed 3 - missing a structured recap is the single most universal gap across coaches, present even in elite 90+ overall calls. 5 Elite = structured recap ('Here's what we covered today: X, Y, Z'), a confidence anchor ('You're in the right place' / 'You're exactly the type of person who succeeds here'), emotional reinforcement/excitement, does NOT end with only logistics. 3 Mid = basic close, positive but no structured recap, generic encouragement without an emotional anchor, or a flat close ('Ok, talk soon'), ends with next steps logistically only. 0 Fail = abrupt or unclear ending, call ends in a disappointing or flat way, client leaves without feeling excited.",
+      "dimension_cap": {
+        "flag_key": "no_structured_recap",
+        "prompt_description": "The close contained no structured recap of what the call covered.",
+        "cap_value": 3
+      }
     },
     {
       "key": "post_call_execution",
@@ -94,10 +104,30 @@
   ],
   "max_score": 100,
   "grade_bands": [
-    { "min": 90, "max": 100, "grade": "Elite" },
-    { "min": 80, "max": 89, "grade": "Strong" },
-    { "min": 70, "max": 79, "grade": "Inconsistent" },
-    { "min": 60, "max": 69, "grade": "At Risk" },
-    { "min": 0, "max": 59, "grade": "Fail" }
+    {
+      "min": 90,
+      "max": 100,
+      "grade": "Elite"
+    },
+    {
+      "min": 80,
+      "max": 89,
+      "grade": "Strong"
+    },
+    {
+      "min": 70,
+      "max": 79,
+      "grade": "Inconsistent"
+    },
+    {
+      "min": 60,
+      "max": 69,
+      "grade": "At Risk"
+    },
+    {
+      "min": 0,
+      "max": 59,
+      "grade": "Fail"
+    }
   ]
 }

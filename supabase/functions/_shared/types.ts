@@ -52,6 +52,10 @@ export interface RawDimensionResult {
   evidence: EvidenceItem[];
   quick_fix: string;
   applicable: boolean;
+  // Present only for dimensions that define a `dimension_cap`. The model
+  // reports whether the cap's condition held; the engine decides what that
+  // does to the score.
+  cap_flag?: GlobalFlagResult;
 }
 
 // After evidence validation + rubric caps are applied.
@@ -92,6 +96,21 @@ export interface RubricDimension {
   // MVP simplification: points are excluded, not literally redistributed
   // to other named dimensions (the rubric doesn't specify exact weights).
   redistributable?: boolean;
+  // A hard rule the rubric states for THIS dimension (e.g. "no North Star
+  // statement → max 10/15"). Same shape as GlobalCap but scoped to one
+  // dimension's score rather than the run total. The model only reports
+  // whether the condition held; rubric-engine.ts applies the cap.
+  dimension_cap?: DimensionCap;
+  // The discrete scores this dimension is allowed to take. The coaching
+  // rubric states exact buckets and forbids interpolation; the kickoff
+  // rubric is band-based with half-steps, so it leaves this unset.
+  buckets?: number[];
+}
+
+export interface DimensionCap {
+  flag_key: string; // the key the model returns in the dimension's cap_flag
+  prompt_description: string; // condition text, fed into the prompt
+  cap_value: number; // this dimension's score cannot exceed this when flagged
 }
 
 // A cap that applies to the RUN TOTAL based on a call-wide condition that

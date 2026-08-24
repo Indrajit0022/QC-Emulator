@@ -40,12 +40,24 @@ export interface RubricRulesResult {
 // points, for the same reason: a percentage cap behaves correctly whether
 // D4 was active or not.
 // ---------------------------------------------------------------------------
+
+// Nearest allowed bucket. Ties go to the LOWER bucket, matching the rubric's
+// instruction to score conservatively when the evidence is borderline.
+function snapToBucket(score: number, buckets: number[]): number {
+  return [...buckets]
+    .sort((a, b) => a - b)
+    .reduce((best, b) =>
+      Math.abs(b - score) < Math.abs(best - score) ? b : best
+    );
+}
+
 export function applyRubricRules(
   raw: RawDimensionResult[],
   globalFlags: GlobalFlagResult[],
   rubric: RubricConfig,
 ): RubricRulesResult {
   const byKey = new Map(raw.map((d) => [d.key, d]));
+  const dimensionCapsApplied: string[] = [];
 
   const finalDimensions: FinalDimensionResult[] = rubric.dimensions.map(
     (rd) => {
@@ -63,15 +75,50 @@ export function applyRubricRules(
         };
       }
       const clampedScore = Math.max(0, Math.min(rd.max_score, model.score));
+
+      // The rubric states some caps as hard rules for a single dimension
+      // ("no North Star statement → max 10/15"). The model only tells us
+      // whether the condition held; the decision is made here.
+      let score = clampedScore;
+      let cappedFrom: number | undefined;
+      const cap = rd.dimension_cap;
+      const capFired = cap !== undefined &&
+        model.cap_flag?.key === cap.flag_key &&
+        model.cap_flag.present === true;
+
+      if (cap && capFired && score > cap.cap_value) {
+        cappedFrom = score;
+        score = cap.cap_value;
+        dimensionCapsApplied.push(
+          `${rd.name}: capped to ${cap.cap_value}/${rd.max_score} (from ${cappedFrom}) — ` +
+            `${model.cap_flag?.reasoning?.trim() || cap.prompt_description}`,
+        );
+      }
+
+      // Discrete-bucket rubrics (coaching) forbid interpolation, so the
+      // model's raw number is snapped onto an allowed value.
+      if (rd.buckets && rd.buckets.length > 0) {
+        const snapped = snapToBucket(score, rd.buckets);
+        // A snap must never undo a cap: if rounding would land above the
+        // cap, take the highest allowed bucket at or below it instead.
+        if (cap && capFired && snapped > cap.cap_value) {
+          const atOrBelow = rd.buckets.filter((b) => b <= cap.cap_value);
+          score = atOrBelow.length ? Math.max(...atOrBelow) : cap.cap_value;
+        } else {
+          score = snapped;
+        }
+      }
+
       return {
         key: rd.key,
         name: rd.name,
         max_score: rd.max_score,
-        score: clampedScore,
+        score,
         reasoning: model.reasoning,
         evidence: model.evidence,
         quick_fix: model.quick_fix,
         applicable: model.applicable,
+        ...(cappedFrom !== undefined ? { capped_from: cappedFrom } : {}),
       };
     },
   );
@@ -90,13 +137,19 @@ export function applyRubricRules(
 
   let percentage = achievableMax > 0 ? (rawTotal / achievableMax) * 100 : 0;
 
-  const capsApplied: string[] = [];
+  // Per-dimension caps are reported alongside the run-total ones so neither
+  // kind is silent in the final report.
+  const capsApplied: string[] = [...dimensionCapsApplied];
   const flagByKey = new Map(globalFlags.map((f) => [f.key, f]));
   for (const cap of rubric.global_caps) {
     const flag = flagByKey.get(cap.key);
     if (flag?.present && percentage > cap.cap_value) {
+      const before = Math.round(percentage);
       percentage = cap.cap_value;
-      capsApplied.push(`${cap.key}: ${flag.reasoning}`);
+      capsApplied.push(
+        `Overall score: capped to ${cap.cap_value}/100 (from ${before}) — ` +
+          `${flag.reasoning?.trim() || cap.prompt_description}`,
+      );
     }
   }
 

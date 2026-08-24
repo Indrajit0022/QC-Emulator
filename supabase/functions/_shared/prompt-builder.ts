@@ -57,6 +57,17 @@ export function buildResponseSchema(
               },
             },
             quick_fix: { type: "string" },
+            cap_flag: {
+              type: "object",
+              description:
+                "Only for a dimension listed with a CAP CONDITION. Report whether that condition held. Keep 'reasoning' to a short phrase.",
+              properties: {
+                key: { type: "string", description: "the cap condition's exact key" },
+                present: { type: "boolean" },
+                reasoning: { type: "string", description: "a short phrase, not a paragraph" },
+              },
+              required: ["key", "present", "reasoning"],
+            },
           },
           required: ["key", "applicable", "score", "reasoning", "evidence", "quick_fix"],
         },
@@ -142,12 +153,20 @@ export function buildEvaluationPrompt(
   const transcriptText = turnsToText(turns);
 
   const dimensionsBlock = dimensionsToScore
-    .map(
-      (d, i) =>
-        `${i + 1}. key: "${d.key}" | name: "${d.name}" | max_score: ${d.max_score}${
-          d.redistributable ? " | OPTIONAL: mark applicable:false and score:0 if genuinely out of scope for this call — see description for the exact disable criteria" : ""
-        }\n   ${d.description}`,
-    )
+    .map((d, i) => {
+      const optionalNote = d.redistributable
+        ? " | OPTIONAL: mark applicable:false and score:0 if genuinely out of scope for this call — see description for the exact disable criteria"
+        : "";
+      const bucketNote = d.buckets?.length
+        ? `\n   ALLOWED SCORES: exactly one of ${d.buckets.join(", ")} — no values in between.`
+        : "";
+      // The cap itself is applied in code; the model is only asked to judge
+      // whether the condition held.
+      const capNote = d.dimension_cap
+        ? `\n   CAP CONDITION (report as "cap_flag" with key "${d.dimension_cap.flag_key}", reasoning in a short phrase): ${d.dimension_cap.prompt_description} You do not apply the cap yourself — score the dimension on its own merits and just report whether this condition held.`
+        : "";
+      return `${i + 1}. key: "${d.key}" | name: "${d.name}" | max_score: ${d.max_score}${optionalNote}\n   ${d.description}${bucketNote}${capNote}`;
+    })
     .join("\n\n");
 
   const globalCapsBlock = rubric.global_caps
