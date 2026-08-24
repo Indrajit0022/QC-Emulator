@@ -66,6 +66,15 @@ export async function callOpenRouterForJson<T>(
           type: "json_schema",
           json_schema: { name: "call_evaluation", strict: true, schema },
         },
+        // The capable free models are mostly reasoning models, and left to
+        // themselves they spend the whole completion budget thinking: one
+        // measured call put 246 of 270 completion tokens into `reasoning`
+        // and returned `{"dimensions":[]}` as the actual content. We want the
+        // reasoning in the `reasoning` FIELD of each dimension, where it is
+        // visible to the user, not in discarded thinking tokens.
+        reasoning: { enabled: false },
+        // Room for a full group of dimensions with evidence and quick fixes.
+        max_tokens: 8000,
         temperature: 0.2,
       }),
     });
@@ -98,7 +107,13 @@ export async function callOpenRouterForJson<T>(
   const json = await res.json();
   const content = json?.choices?.[0]?.message?.content;
   if (!content) {
-    throw new OpenRouterError("OpenRouter response had no message content");
+    // Seen when a model spends its whole budget on reasoning tokens, or when
+    // the provider truncates. Another tick is worth a try before giving up.
+    const finish = json?.choices?.[0]?.finish_reason ?? "unknown";
+    throw new OpenRouterError(
+      `Model returned an empty completion (finish_reason: ${finish})`,
+      true,
+    );
   }
 
   // Not every free model honors response_format cleanly — some still wrap

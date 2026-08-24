@@ -26,9 +26,14 @@ create extension if not exists pg_net;
 -- Un-schedule a previous version of this job if this migration is re-run.
 select cron.unschedule(jobid) from cron.job where jobname = 'process-run-tick';
 
--- Every 10 seconds, ask the Edge Function to advance one stage of one run.
+-- Every 10 seconds, ask the Edge Function to advance one unit of work.
 -- (If your pg_cron version predates sub-minute schedules, use '* * * * *'
 -- instead — background processing still works, just with slower ticks.)
+--
+-- The `where not exists` guard matters: pg_net works one request at a time,
+-- and a scoring call takes tens of seconds. Without it the job enqueues far
+-- faster than the queue drains, the backlog grows without bound, and every
+-- surplus request is a wasted "nothing to claim" invocation anyway.
 select cron.schedule(
   'process-run-tick',
   '10 seconds',
@@ -43,7 +48,8 @@ select cron.schedule(
       )
     ),
     body := '{}'::jsonb,
-    timeout_milliseconds := 120000
-  );
+    timeout_milliseconds := 150000
+  )
+  where not exists (select 1 from net.http_request_queue);
   $$
 );
