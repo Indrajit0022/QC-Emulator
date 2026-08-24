@@ -60,7 +60,7 @@ export function buildResponseSchema(
             cap_flag: {
               type: "object",
               description:
-                "Only for a dimension listed with a CAP CONDITION. Report whether that condition held. Keep 'reasoning' to a short phrase.",
+                "Only for a dimension listed with a CAP CONDITION. Report whether that condition held. This object is the ONLY place the cap condition may be discussed - keep its own 'reasoning' to a short phrase, and never repeat it in the dimension's 'reasoning'.",
               properties: {
                 key: { type: "string", description: "the cap condition's exact key" },
                 present: { type: "boolean" },
@@ -126,8 +126,8 @@ Non-negotiable rules:
 3. If a dimension's target behaviour is NOT present in the transcript, do not infer it from tone, mood, or general impression. Set the score to reflect its absence, leave evidence empty, and say plainly in "reasoning" that no transcript evidence was found — do not invent evidence to avoid an awkward low score.
 4. If a dimension does not genuinely apply to this call (see its applicability note, if any), set "applicable": false and explain why; still return a score of 0 and empty evidence.
 5. "quick_fix" is one concrete, actionable sentence the coach could apply on their very next call — not generic advice.
-6. Score each dimension independently using ONLY that dimension's own band/bucket table. Do NOT apply the global caps yourself — a separate deterministic system does that from the "global_flags" you report. Just report, per flag, whether the underlying condition held and why.
-7. "reasoning" is client-facing feedback the coach will read. Never mention rubric mechanics in it: no cap conditions, no band or bucket names, no threshold numbers, no reference to scores being capped or to a separate system applying rules. Describe what actually happened in the call and why that supports the score, in plain language. Do not narrate the grading process.
+6. Score each dimension independently using ONLY that dimension's own band/bucket table. Do NOT apply any cap yourself — not the global caps, and not a dimension's own CAP CONDITION. A separate deterministic system applies every cap from the flags you report. Judge each dimension exactly as you would if no cap existed, and report the flags truthfully.
+7. "reasoning" is client-facing feedback the coach will read. Never mention rubric mechanics in it: no cap conditions, no band or bucket names, no threshold numbers, no reference to scores being capped or to a separate system applying rules, and no restating of these instructions. Describe what actually happened in the call and why that supports the score, in plain language. Do not narrate the grading process. In particular, never end with a sentence of this shape: "Since no structured recap was delivered, the score is capped at Mid per the rubric's cap condition" or "The absence of a North Star statement triggers the cap condition, but per instructions, the dimension is scored on its own merits first." State the observation about the call and stop there.
 8. Output must match the provided JSON schema exactly. No prose outside the JSON.
 
 SCORING PHILOSOPHY FOR THIS RUBRIC:
@@ -164,7 +164,7 @@ export function buildEvaluationPrompt(
       // The cap itself is applied in code; the model is only asked to judge
       // whether the condition held.
       const capNote = d.dimension_cap
-        ? `\n   CAP CONDITION (report as "cap_flag" with key "${d.dimension_cap.flag_key}", reasoning in a short phrase): ${d.dimension_cap.prompt_description} You do not apply the cap yourself — score the dimension on its own merits and just report whether this condition held.`
+        ? `\n   CAP CONDITION — report ONLY inside "cap_flag" as {"key": "${d.dimension_cap.flag_key}", "present": true/false, "reasoning": short phrase}: ${d.dimension_cap.prompt_description} Judge and score this dimension exactly as you would if this condition did not exist. This condition is invisible to the coach: the dimension's own "reasoning" must not mention it, must not mention any cap or score limit, and must not describe the order in which scoring and capping happen.`
         : "";
       return `${i + 1}. key: "${d.key}" | name: "${d.name}" | max_score: ${d.max_score}${optionalNote}\n   ${d.description}${bucketNote}${capNote}`;
     })
