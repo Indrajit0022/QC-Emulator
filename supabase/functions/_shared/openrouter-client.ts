@@ -2,20 +2,34 @@ import type { BuiltPrompt } from "./prompt-builder.ts";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-// Set via `supabase secrets set OPENROUTER_MODEL=...`. Pick a free model with
-// a large context window and JSON/structured-output support — check
-// https://openrouter.ai/models?supported_parameters=tools with the :free
-// filter, since the free lineup rotates. Default below is a placeholder;
-// override with the secret rather than editing code when the model changes.
-const DEFAULT_MODEL = "qwen/qwen3-coder:free";
+// Fallback only. Prefer setting the model via the OPENROUTER_MODEL secret or
+// the 'openrouter_model' Vault entry, because OpenRouter's free lineup
+// rotates — the previous default here ("qwen/qwen3-coder:free") was already
+// delisted. To see what is currently free and supports structured output:
+//   select net.http_get('https://openrouter.ai/api/v1/models');
+// then filter on id like '%:free' and supported_parameters ? 'structured_outputs'.
+const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 
-export class OpenRouterError extends Error {}
+// Edge Functions get ~150s of wall clock; abort before that so the failure is
+// ours to handle rather than an opaque runtime kill.
+const REQUEST_TIMEOUT_MS = 110_000;
+
+// `retryable` marks failures worth another cron tick rather than a permanent
+// failure: upstream rate limits on the shared free-tier pool (429), provider
+// 5xx, and requests that never left the box.
+export class OpenRouterError extends Error {
+  readonly retryable: boolean;
+  constructor(message: string, retryable = false) {
+    super(message);
+    this.retryable = retryable;
+  }
+}
 
 export async function callOpenRouterForJson<T>(
   prompt: BuiltPrompt,
   schema: Record<string, unknown>,
-  // Optional override. Supplied by the worker when the key lives in Vault
-  // rather than in an Edge Function secret (see resolveOpenRouterKey).
+  // Overrides supplied by the worker when these live in Vault rather than in
+  // Edge Function secrets (see resolveOpenRouterConfig in process-run).
   apiKeyOverride?: string,
   modelOverride?: string,
 ): Promise<{ data: T; model: string }> {
@@ -23,33 +37,61 @@ export async function callOpenRouterForJson<T>(
   if (!apiKey) throw new OpenRouterError("OPENROUTER_API_KEY is not set");
   const model = modelOverride ?? Deno.env.get("OPENROUTER_MODEL") ?? DEFAULT_MODEL;
 
-  const res = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      // OpenRouter asks free-tier callers to identify their app:
-      "HTTP-Referer": Deno.env.get("PUBLIC_APP_URL") ?? "https://example.com",
-      "X-Title": "Call Evaluation System",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: prompt.system },
-        { role: "user", content: prompt.user },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: "call_evaluation", strict: true, schema },
+  // Bound the request well inside the Edge Function's wall-clock limit. If the
+  // runtime kills the invocation instead, the catch block below never runs and
+  // the run would sit in `processing` forever — so we'd rather abort first and
+  // surface a retryable error. (A stuck-run watchdog in SQL is the backstop.)
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(OPENROUTER_URL, {
+      signal: controller.signal,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        // OpenRouter asks free-tier callers to identify their app:
+        "HTTP-Referer": Deno.env.get("PUBLIC_APP_URL") ?? "https://example.com",
+        "X-Title": "Call Evaluation System",
       },
-      temperature: 0.2,
-    }),
-  });
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: prompt.system },
+          { role: "user", content: prompt.user },
+        ],
+        response_format: {
+          type: "json_schema",
+          json_schema: { name: "call_evaluation", strict: true, schema },
+        },
+        temperature: 0.2,
+      }),
+    });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new OpenRouterError(
+        `Model request timed out after ${REQUEST_TIMEOUT_MS / 1000}s`,
+        true,
+      );
+    }
+    // Never reached the provider — always worth retrying.
+    throw new OpenRouterError(
+      `OpenRouter request could not be sent: ${e instanceof Error ? e.message : String(e)}`,
+      true,
+    );
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!res.ok) {
     const body = await res.text();
+    // 429 here is usually the shared free-tier pool, not this key's quota.
+    const retryable = res.status === 429 || res.status >= 500;
     throw new OpenRouterError(
       `OpenRouter request failed (${res.status}): ${body.slice(0, 500)}`,
+      retryable,
     );
   }
 

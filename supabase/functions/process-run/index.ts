@@ -1,10 +1,10 @@
 // supabase/functions/process-run/index.ts
 //
 // Invoked every ~10s by pg_cron (see supabase/migrations/0003_cron.sql).
-// Claims exactly ONE run and advances it exactly ONE stage, then returns.
+// Claims exactly ONE run and advances it by one unit of work, then returns.
 // This keeps every invocation short (well under the 150s free-tier Edge
-// Function timeout) even though a full run passes through 7 stages and one
-// slow free-tier LLM call.
+// Function timeout): most stages are trivial, and the scoring stage does one
+// group of dimensions per tick rather than all 12 in a single call.
 //
 // Deploy: supabase functions deploy process-run
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are injected automatically.
@@ -14,11 +14,21 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { loadRubric } from "../_shared/rubric-loader.ts";
 import { parseTranscript } from "../_shared/transcript-parser.ts";
-import { buildEvaluationPrompt, buildResponseSchema } from "../_shared/prompt-builder.ts";
-import { callOpenRouterForJson } from "../_shared/openrouter-client.ts";
+import {
+  buildEvaluationPrompt,
+  buildResponseSchema,
+  buildSummaryPrompt,
+  SUMMARY_SCHEMA,
+} from "../_shared/prompt-builder.ts";
+import { callOpenRouterForJson, OpenRouterError } from "../_shared/openrouter-client.ts";
 import { validateDimensionEvidence, stripInvalidEvidence } from "../_shared/evidence-validator.ts";
 import { applyRubricRules, evidenceCoverage } from "../_shared/rubric-engine.ts";
-import type { GlobalFlagResult, RawDimensionResult, RunRow } from "../_shared/types.ts";
+import type {
+  FinalDimensionResult,
+  GlobalFlagResult,
+  RawDimensionResult,
+  RunRow,
+} from "../_shared/types.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -46,9 +56,27 @@ async function resolveOpenRouterConfig(): Promise<{
   return { apiKey, model };
 }
 
+// ~20 ticks at 10s each: a few minutes of riding out an upstream rate limit
+// before the run is declared failed.
+const MAX_ATTEMPTS = 20;
+
+// Dimensions scored per LLM call. Scoring is resumable: each cron tick scores
+// the next unscored group and stays on `scoring_dimensions` until all 12 are
+// done. That keeps every invocation well inside the Edge Function wall-clock
+// limit even for the 65k-character transcript (PRD §24).
+const DIMENSIONS_PER_CALL = 4;
+
+interface DraftReport {
+  dimensions: RawDimensionResult[];
+  global_flags: GlobalFlagResult[];
+}
+
 interface ModelResponseShape {
   dimensions: RawDimensionResult[];
   global_flags: GlobalFlagResult[];
+}
+
+interface SummaryShape {
   brief: string;
   red_flags: string[];
   one_thing: string;
@@ -95,49 +123,78 @@ Deno.serve(async (_req) => {
       }
 
       case "extracting_evidence":
-        // Evidence extraction happens inside the single scoring call for
-        // rate-limit reasons (see prompt-builder.ts design note). This stage
-        // exists purely so the UI timeline matches PRD §7; it does no work
-        // of its own.
+        // Evidence is extracted as part of scoring (the model returns quotes
+        // alongside each score, which are then validated against the
+        // transcript). This stage exists so the UI timeline matches PRD §7;
+        // it does no work of its own.
         await advance(run.id, "scoring_dimensions");
         break;
 
       case "scoring_dimensions": {
         const rubric = loadRubric(run.call_type);
         const turns = parseTranscript(run.transcript);
-        const prompt = buildEvaluationPrompt(rubric, turns);
 
+        // Resume from whatever earlier ticks already scored.
+        const { data: fresh } = await supabase
+          .from("runs")
+          .select("report")
+          .eq("id", run.id)
+          .single();
+        const draft = (fresh?.report?._draft ?? {}) as Partial<DraftReport>;
+        const scored = draft.dimensions ?? [];
+        const scoredKeys = new Set(scored.map((d) => d.key));
+
+        const remaining = rubric.dimensions.filter((d) => !scoredKeys.has(d.key));
+        if (remaining.length === 0) {
+          await advance(run.id, "applying_rules");
+          break;
+        }
+
+        const group = remaining.slice(0, DIMENSIONS_PER_CALL);
+        // Global flags are transcript-wide, so they only need asking once.
+        const isFirstGroup = scored.length === 0;
+
+        const prompt = buildEvaluationPrompt(rubric, turns, group, isFirstGroup);
         const cfg = await resolveOpenRouterConfig();
         const { data, model } = await callOpenRouterForJson<ModelResponseShape>(
           prompt,
-          buildResponseSchema(rubric),
+          buildResponseSchema(rubric, isFirstGroup),
           cfg.apiKey,
           cfg.model,
         );
 
-        const validated = validateDimensionEvidence(data.dimensions, turns);
+        // Keep only what we asked for, so a chatty model can't inject keys
+        // from another group and cut the loop short.
+        const requested = new Set(group.map((d) => d.key));
+        const returned = (data.dimensions ?? []).filter((d) => requested.has(d.key));
+
+        // A group that comes back with nothing usable would otherwise spin on
+        // this stage forever; fail loudly instead.
+        if (returned.length === 0) {
+          throw new Error(
+            `Model returned no results for dimensions: ${group.map((d) => d.key).join(", ")}`,
+          );
+        }
+
+        const validated = validateDimensionEvidence(returned, turns);
         const cleaned = stripInvalidEvidence(validated);
 
-        // Stash the raw model output on the row so applying_rules doesn't
-        // need to re-call the LLM. `report` is jsonb, so we can park a
-        // temporary `_draft` key here and overwrite it in building_report.
+        const mergedDimensions = [...scored, ...cleaned];
+        const nextDraft: DraftReport = {
+          dimensions: mergedDimensions,
+          global_flags: isFirstGroup ? (data.global_flags ?? []) : (draft.global_flags ?? []),
+        };
+
         await supabase
           .from("runs")
-          .update({
-            model,
-            report: {
-              _draft: {
-                dimensions: cleaned,
-                global_flags: data.global_flags,
-                brief: data.brief,
-                red_flags: data.red_flags,
-                one_thing: data.one_thing,
-              },
-            },
-          })
+          .update({ model, attempts: 0, report: { _draft: nextDraft } })
           .eq("id", run.id);
 
-        await advance(run.id, "applying_rules");
+        // Advance only once every dimension is scored; otherwise stay here and
+        // let the next tick pick up the following group.
+        if (mergedDimensions.length >= rubric.dimensions.length) {
+          await advance(run.id, "applying_rules");
+        }
         break;
       }
 
@@ -149,15 +206,7 @@ Deno.serve(async (_req) => {
           .eq("id", run.id)
           .single();
 
-        const draft = fresh?.report?._draft as
-          | {
-              dimensions: RawDimensionResult[];
-              global_flags: GlobalFlagResult[];
-              brief: string;
-              red_flags: string[];
-              one_thing: string;
-            }
-          | undefined;
+        const draft = fresh?.report?._draft as DraftReport | undefined;
         if (!draft) throw new Error("Missing scored dimensions before applying rubric rules.");
 
         const rules = applyRubricRules(draft.dimensions, draft.global_flags ?? [], rubric);
@@ -185,12 +234,15 @@ Deno.serve(async (_req) => {
             max_score: rules.maxScore,
             grade: rules.grade,
             report: {
-              _draft: draft, // still needed by building_report
+              _draft: draft,
               _rules: {
                 totalScore: rules.totalScore,
                 maxScore: rules.maxScore,
                 grade: rules.grade,
                 capsApplied: rules.capsApplied,
+                // building_report summarises from this, so the scorecard has
+                // to survive the stage boundary.
+                dimensions: rules.dimensions,
               },
             },
           })
@@ -201,19 +253,25 @@ Deno.serve(async (_req) => {
       }
 
       case "building_report": {
+        const rubric = loadRubric(run.call_type);
         const { data: fresh } = await supabase
           .from("runs")
-          .select("report, total_score, max_score")
+          .select("report, total_score, max_score, grade")
           .eq("id", run.id)
           .single();
 
-        const draft = fresh?.report?._draft as
-          | { brief: string; red_flags: string[]; one_thing: string; dimensions: RawDimensionResult[] }
-          | undefined;
         const rulesResult = fresh?.report?._rules as
-          | { capsApplied: string[] }
+          | {
+              capsApplied: string[];
+              dimensions: FinalDimensionResult[];
+              totalScore: number;
+              maxScore: number;
+              grade: string;
+            }
           | undefined;
-        if (!draft) throw new Error("Missing draft report before building final report.");
+        if (!rulesResult) {
+          throw new Error("Missing scored dimensions before building final report.");
+        }
 
         const { data: dimRows } = await supabase
           .from("evaluation_dimensions")
@@ -224,19 +282,35 @@ Deno.serve(async (_req) => {
           (dimRows ?? []).map((r: { evidence: unknown[] }) => ({ evidence: r.evidence }) as never),
         );
 
+        // The narrative pass runs here, against the finished scorecard, so the
+        // model judges the whole call rather than one group of dimensions.
+        const cfg = await resolveOpenRouterConfig();
+        const { data: summary } = await callOpenRouterForJson<SummaryShape>(
+          buildSummaryPrompt(
+            rubric,
+            rulesResult.dimensions,
+            rulesResult.totalScore,
+            rulesResult.maxScore,
+            rulesResult.grade,
+            rulesResult.capsApplied ?? [],
+          ),
+          SUMMARY_SCHEMA as unknown as Record<string, unknown>,
+          cfg.apiKey,
+          cfg.model,
+        );
+
         const finalReport = {
           one_thing: {
-            text: draft.one_thing,
+            text: summary.one_thing,
             score_without: fresh?.total_score ?? 0,
-            // A real "with" estimate needs rubric-specific modeling; MVP
-            // ships the model's qualitative estimate only. Revisit once the
-            // real rubric caps are wired in.
+            // A real "with" estimate needs rubric-specific what-if modelling;
+            // the MVP ships the model's qualitative recommendation only.
             score_with_estimate: fresh?.total_score ?? 0,
           },
-          brief: draft.brief,
-          red_flags: draft.red_flags,
+          brief: summary.brief,
+          red_flags: summary.red_flags ?? [],
           evidence_coverage: coverage,
-          caps_applied: rulesResult?.capsApplied ?? [],
+          caps_applied: rulesResult.capsApplied ?? [],
         };
 
         await supabase
@@ -245,6 +319,7 @@ Deno.serve(async (_req) => {
             report: finalReport,
             status: "completed",
             processing_stage: "completed",
+            error: null,
             processing_completed_at: new Date().toISOString(),
           })
           .eq("id", run.id);
@@ -259,15 +334,37 @@ Deno.serve(async (_req) => {
 
     return json({ ok: true, claimed: true, run_id: run.id });
   } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const attempts = (run.attempts ?? 0) + 1;
+    const retryable = err instanceof OpenRouterError && err.retryable;
+
+    // A transient upstream failure leaves the run claimable at the same
+    // stage, so the next cron tick simply tries again. The run only fails
+    // for good once the attempt budget is gone.
+    if (retryable && attempts < MAX_ATTEMPTS) {
+      await supabase
+        .from("runs")
+        .update({
+          attempts,
+          error: `Transient upstream error (attempt ${attempts}/${MAX_ATTEMPTS}), retrying: ${message}`,
+        })
+        .eq("id", run.id);
+
+      return json({ ok: true, run_id: run.id, retrying: true, attempts }, 200);
+    }
+
     await supabase
       .from("runs")
       .update({
         status: "failed",
-        error: err instanceof Error ? err.message : String(err),
+        attempts,
+        error: retryable
+          ? `Gave up after ${attempts} attempts. Last error: ${message}`
+          : message,
       })
       .eq("id", run.id);
 
-    return json({ ok: false, run_id: run.id, error: String(err) }, 200);
+    return json({ ok: false, run_id: run.id, error: message }, 200);
   }
 });
 

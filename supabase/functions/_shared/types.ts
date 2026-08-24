@@ -26,6 +26,7 @@ export interface RunRow {
   grade: string | null;
   report: FinalReport | null;
   error: string | null;
+  attempts: number;
   created_at: string;
   updated_at: string;
   processing_started_at: string | null;
