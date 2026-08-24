@@ -96,7 +96,28 @@ export async function callOpenRouterForJson<T>(
 
   if (!res.ok) {
     const body = await res.text();
-    // 429 here is usually the shared free-tier pool, not this key's quota.
+
+    // Two very different 429s hide behind the same status code:
+    //   - the shared free-tier pool being momentarily busy, which clears in
+    //     seconds and is worth retrying;
+    //   - this key's own daily free-model allowance being spent, which does
+    //     not clear until the daily reset. Retrying that twenty times just
+    //     delays an error the operator needs to see, so fail fast and say
+    //     what to actually do about it.
+    const dailyQuotaExhausted = res.status === 429 &&
+      (body.includes("free-models-per-day") ||
+        body.includes("openrouter_free_tier_daily"));
+
+    if (dailyQuotaExhausted) {
+      throw new OpenRouterError(
+        "OpenRouter's free-tier daily request limit for this API key is used up. " +
+          "It resets at 00:00 UTC. To raise the limit now, add credits to the " +
+          "OpenRouter account (that lifts free-model usage to 1000 requests/day), " +
+          "or point OPENROUTER_MODEL at a paid model.",
+        false,
+      );
+    }
+
     const retryable = res.status === 429 || res.status >= 500;
     throw new OpenRouterError(
       `OpenRouter request failed (${res.status}): ${body.slice(0, 500)}`,
