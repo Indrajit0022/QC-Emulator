@@ -8,7 +8,7 @@ import type { DimensionRow, RunRow } from "../types";
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 10, fontFamily: "Helvetica" },
   h1: { fontSize: 20, marginBottom: 4 },
-  grade: { fontSize: 12, marginBottom: 16, color: "#2F6F4F" },
+  grade: { fontSize: 12, marginBottom: 16, color: "#639922" },
   sectionTitle: {
     fontSize: 9,
     textTransform: "uppercase",
