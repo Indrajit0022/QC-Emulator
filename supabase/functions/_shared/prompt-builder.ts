@@ -127,7 +127,8 @@ Non-negotiable rules:
 4. If a dimension does not genuinely apply to this call (see its applicability note, if any), set "applicable": false and explain why; still return a score of 0 and empty evidence.
 5. "quick_fix" is one concrete, actionable sentence the coach could apply on their very next call — not generic advice.
 6. Score each dimension independently using ONLY that dimension's own band/bucket table. Do NOT apply the global caps yourself — a separate deterministic system does that from the "global_flags" you report. Just report, per flag, whether the underlying condition held and why.
-7. Output must match the provided JSON schema exactly. No prose outside the JSON.
+7. "reasoning" is client-facing feedback the coach will read. Never mention rubric mechanics in it: no cap conditions, no band or bucket names, no threshold numbers, no reference to scores being capped or to a separate system applying rules. Describe what actually happened in the call and why that supports the score, in plain language. Do not narrate the grading process.
+8. Output must match the provided JSON schema exactly. No prose outside the JSON.
 
 SCORING PHILOSOPHY FOR THIS RUBRIC:
 ${rubric.scoring_notes}`;
