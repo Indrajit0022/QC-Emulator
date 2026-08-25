@@ -1,30 +1,21 @@
 import { NavLink } from "react-router-dom";
 
-// Left rail navigation. Two real destinations only — Run and Evaluations —
-// so we don't invent Coach/Client/Program surfaces the DB can't populate.
+// Slim left rail: brand mark, nav items, no footer clutter.
+// Only two destinations because the DB only supports two.
 export default function Sidebar() {
   return (
     <aside className="hidden md:flex md:w-60 shrink-0 flex-col border-r border-line bg-card">
-      <div className="px-5 py-6 flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-coral to-strong flex items-center justify-center text-white text-xs font-bold">
-          CE
+      <div className="px-5 py-6 flex items-center gap-3">
+        <div className="h-9 w-9 rounded-lg bg-ink flex items-center justify-center text-white text-[11px] font-bold tracking-wide">
+          QC
         </div>
-        <div>
-          <div className="text-sm font-semibold text-ink leading-none">Call Eval</div>
-          <div className="mt-1 text-[10px] uppercase tracking-widest text-muted">
-            evidence-first
-          </div>
-        </div>
+        <span className="text-[15px] font-semibold text-ink">Evaluator</span>
       </div>
 
       <nav className="mt-2 px-3 flex-1">
         <NavItem to="/" label="Run evaluation" icon={PlayIcon} end />
         <NavItem to="/evaluations" label="Evaluations" icon={ListIcon} />
       </nav>
-
-      <div className="px-5 py-4 text-[10px] text-muted border-t border-line">
-        Every score traces back to a literal quote.
-      </div>
     </aside>
   );
 }
@@ -45,7 +36,7 @@ function NavItem({
       to={to}
       end={end}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1 transition-colors ${
+        `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-1 transition-colors ${
           isActive
             ? "bg-coral-bg text-coral-text font-medium"
             : "text-muted hover:bg-paper hover:text-ink"
@@ -60,14 +51,15 @@ function NavItem({
 
 function PlayIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M6 4l14 8-14 8V4z" strokeLinejoin="round" />
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M10 9l5 3-5 3V9z" fill="currentColor" stroke="none" />
     </svg>
   );
 }
 function ListIcon({ className }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
       <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" strokeLinecap="round" />
     </svg>
   );
