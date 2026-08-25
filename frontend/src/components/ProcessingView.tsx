@@ -57,7 +57,7 @@ export default function ProcessingView({ run }: { run: RunRow }) {
       </header>
 
       {/* ── Current step card ──────────────────────────────────── */}
-      <div className="bg-card dark:bg-dark-card border border-line dark:border-dark-line rounded-card p-8 mb-4 relative overflow-hidden">
+      <div className="glass-card rounded-card p-8 mb-4 relative overflow-hidden">
         <div className="text-center">
           <p className="text-[11px] uppercase tracking-widest text-muted dark:text-dark-muted">
             Step {currentIndex + 1} of {STAGE_ORDER.length}
@@ -90,7 +90,7 @@ export default function ProcessingView({ run }: { run: RunRow }) {
       </div>
 
       {/* ── Pipeline timeline ──────────────────────────────────── */}
-      <div className="bg-card dark:bg-dark-card border border-line dark:border-dark-line rounded-card p-5 mb-4">
+      <div className="glass-card rounded-card p-5 mb-4">
         <p className="text-[11px] uppercase tracking-widest text-muted dark:text-dark-muted mb-4">Pipeline</p>
         <ol className="space-y-2">
           {STAGE_ORDER.map((stage, i) => {
@@ -139,7 +139,7 @@ export default function ProcessingView({ run }: { run: RunRow }) {
       {/* ── Rotating tip card ─────────────────────────────────── */}
       <div
         key={tipIdx}
-        className="bg-gradient-to-br from-coral-bg dark:from-dark-coral-bg via-card dark:via-dark-card to-[#EAF3DE] dark:to-[#0E2417] border border-line dark:border-dark-line rounded-card p-5 rise"
+        className="glass-card bg-gradient-to-br from-coral-bg/50 dark:from-dark-coral-bg/30 via-transparent to-[#EAF3DE]/30 dark:to-[#0E2417]/30 rounded-card p-5 rise"
       >
         <p className="text-[11px] uppercase tracking-widest text-muted dark:text-dark-muted mb-2">
           💡 Coaching tip · while you wait

@@ -45,6 +45,9 @@ export interface RunRow {
   status: RunStatus;
   processing_stage: ProcessingStage;
   transcript: string;
+  coach_name: string | null;
+  client_name: string | null;
+  deleted_at: string | null;
   total_score: number | null;
   max_score: number | null;
   grade: string | null;

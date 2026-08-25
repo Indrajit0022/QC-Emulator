@@ -27,6 +27,20 @@ export function extractClientName(transcript: string | null | undefined): string
   return firstNonCoach ?? [...speakers][0] ?? "Client";
 }
 
+export function extractCoachName(transcript: string | null | undefined): string | null {
+  if (!transcript) return null;
+  const lines = transcript.split(/\r?\n/);
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    const bracket = line.match(/^\[([^\]]{1,60})\]\s*:/);
+    const plain = !bracket ? line.match(/^([A-Za-z][A-Za-z0-9 ._-]{0,40}?)\s*:/) : null;
+    const label = (bracket?.[1] ?? plain?.[1] ?? "").trim();
+    if (label) return label;
+  }
+  return null;
+}
+
 // Filesystem-safe version for PDF filenames.
 export function clientNameForFilename(name: string): string {
   return name.replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+|_+$/g, "") || "client";

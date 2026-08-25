@@ -20,10 +20,10 @@ export default function DimensionCard({
         : "bg-weak-bg dark:bg-dark-weak-bg text-weak-text dark:text-dark-weak-text";
 
   return (
-    <div className={last ? "" : "border-b border-line dark:border-dark-line"}>
+    <div className={last ? "" : "border-b border-line/30 dark:border-dark-line/30"}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-paper/60 dark:hover:bg-dark-surface/60 transition-colors"
+        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-paper/40 dark:hover:bg-dark-surface/40 transition-all duration-200"
       >
         {/* Index number */}
         {index !== undefined && (
@@ -68,7 +68,7 @@ export default function DimensionCard({
       </button>
 
       {open && (
-        <div className="px-5 pb-5 pt-1 space-y-4 bg-paper/40 dark:bg-dark-paper/40 border-t border-line dark:border-dark-line">
+        <div className="px-5 pb-5 pt-1 space-y-4 bg-paper/30 dark:bg-dark-paper/30 backdrop-blur-sm border-t border-line/20 dark:border-dark-line/20">
           {dim.reasoning && (
             <div>
               <p className="text-xs uppercase tracking-widest text-muted dark:text-dark-muted mb-1.5">Reasoning</p>
@@ -81,7 +81,7 @@ export default function DimensionCard({
             {dim.evidence.length === 0 ? (
               <p className="text-sm text-muted dark:text-dark-muted italic">No transcript evidence found.</p>
             ) : (
-              <div className="bg-paper dark:bg-dark-paper border border-line dark:border-dark-line rounded-card p-4 space-y-3">
+              <div className="bg-paper/60 dark:bg-dark-paper/60 backdrop-blur-sm border border-line/30 dark:border-dark-line/30 rounded-card p-4 space-y-3">
                 {dim.evidence.map((e, i) => (
                   <div key={i} className="text-sm leading-relaxed flex gap-2">
                     <span className="text-coral shrink-0 mt-0.5">❝</span>

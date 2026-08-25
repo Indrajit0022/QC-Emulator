@@ -7,11 +7,9 @@ type CardDef = {
   id: CallType;
   title: string;
   blurb: string;
-  tint: string;
-  darkTint: string;
-  ink: string;
-  darkInk: string;
   icon: JSX.Element;
+  gradient: string;
+  darkGradient: string;
 };
 
 const CARDS: CardDef[] = [
@@ -19,10 +17,8 @@ const CARDS: CardDef[] = [
     id: "kickoff",
     title: "Kick-off call",
     blurb: "Evaluate onboarding, alignment, and expectation setting.",
-    tint: "bg-[#FFF3E7]",
-    darkTint: "dark:bg-[#2A1A00]",
-    ink: "text-[#D97706]",
-    darkInk: "dark:text-[#FBB740]",
+    gradient: "from-amber-500/10 to-orange-500/5",
+    darkGradient: "dark:from-amber-500/5 dark:to-orange-500/3",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
         <path d="M4.5 16.5c-1 1.5-1 4 0 5 1 1 3.5 1 5 0M14 9l-3-3M9 13l-1 1-3-3 1-1M15 4l5 5-9 9-5-5 9-9zM14 4l6 6" strokeLinejoin="round" strokeLinecap="round" />
@@ -33,10 +29,8 @@ const CARDS: CardDef[] = [
     id: "coaching",
     title: "Coaching call",
     blurb: "Evaluate coaching techniques, listening, and guidance.",
-    tint: "bg-[#E8F6EC]",
-    darkTint: "dark:bg-[#0E2417]",
-    ink: "text-[#2F8F4E]",
-    darkInk: "dark:text-[#4ADE80]",
+    gradient: "from-emerald-500/10 to-green-500/5",
+    darkGradient: "dark:from-emerald-500/5 dark:to-green-500/3",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
         <path d="M4 5h16v11H7l-3 3V5z" strokeLinejoin="round" />
@@ -86,7 +80,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 md:px-12 py-10">
-      {/* ── Header ─────────────────────────────────────────────── */}
+      {/* Header */}
       <header className="mb-8">
         <p className="font-mono text-xs uppercase tracking-widest text-muted dark:text-dark-muted mb-1">
           QC Evaluator
@@ -97,7 +91,7 @@ export default function Home() {
         </p>
       </header>
 
-      {/* ── Call type cards ─────────────────────────────────────── */}
+      {/* Call type cards */}
       <section className="mb-8">
         <h2 className="text-sm font-semibold text-ink dark:text-dark-ink uppercase tracking-wide mb-1">
           1 — Choose call type
@@ -111,15 +105,22 @@ export default function Home() {
               <div
                 key={c.id}
                 className={`
-                  rounded-card border bg-card dark:bg-dark-card p-6 flex flex-col transition-all duration-200 cursor-pointer
+                  rounded-card glass-card glow-border p-6 flex flex-col cursor-pointer
+                  bg-gradient-to-br ${c.gradient} ${c.darkGradient}
+                  transition-all duration-300
                   ${active
-                    ? "border-coral shadow-lg shadow-coral/10 ring-2 ring-coral/20"
-                    : "border-line dark:border-dark-line hover:border-muted dark:hover:border-dark-muted hover:shadow-md"
+                    ? "!border-coral/40 dark:!border-coral/30 shadow-glow scale-[1.01]"
+                    : "hover:shadow-glass-lg hover:scale-[1.005]"
                   }
                 `}
                 onClick={() => pickType(c.id)}
               >
-                <div className={`h-14 w-14 rounded-2xl ${c.tint} ${c.darkTint} flex items-center justify-center ${c.ink} ${c.darkInk} mb-4`}>
+                <div className={`h-12 w-12 rounded-xl flex items-center justify-center mb-4 transition-colors
+                  ${active
+                    ? "bg-coral/10 dark:bg-coral/15 text-coral"
+                    : "bg-ink/5 dark:bg-white/5 text-ink/60 dark:text-dark-ink/60"
+                  }
+                `}>
                   {c.icon}
                 </div>
                 <h3 className="text-[15px] font-semibold text-ink dark:text-dark-ink">{c.title}</h3>
@@ -127,10 +128,10 @@ export default function Home() {
                 <button
                   onClick={(e) => { e.stopPropagation(); pickType(c.id); }}
                   className={`
-                    mt-5 w-full rounded-xl py-2.5 text-sm font-semibold transition-all
+                    mt-5 w-full rounded-xl py-2.5 text-sm font-semibold transition-all duration-200
                     ${active
                       ? "bg-coral text-white shadow-md shadow-coral/20"
-                      : "bg-ink dark:bg-dark-surface text-white dark:text-dark-ink hover:bg-ink/90 dark:hover:bg-dark-line"
+                      : "bg-ink/90 dark:bg-dark-surface text-white dark:text-dark-ink hover:bg-ink dark:hover:bg-dark-line border border-transparent dark:border-dark-line/50"
                     }
                   `}
                 >
@@ -142,21 +143,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Transcript ─────────────────────────────────────────── */}
+      {/* Transcript */}
       {callType && (
-        <section ref={transcriptRef}>
+        <section ref={transcriptRef} className="animate-slide-up">
           <h2 className="text-sm font-semibold text-ink dark:text-dark-ink uppercase tracking-wide mb-1">
             2 — Paste transcript
           </h2>
           <p className="text-xs text-muted dark:text-dark-muted mb-4">
             Format:{" "}
-            <code className="font-mono bg-paper dark:bg-dark-surface px-1.5 py-0.5 rounded text-ink dark:text-dark-ink border border-line dark:border-dark-line">
+            <code className="font-mono bg-paper/80 dark:bg-dark-surface/80 px-1.5 py-0.5 rounded-lg text-ink dark:text-dark-ink border border-line/50 dark:border-dark-line/50">
               [Speaker]: text
             </code>{" "}
             — one turn per line.
           </p>
 
-          <div className="bg-card dark:bg-dark-card border border-line dark:border-dark-line rounded-card p-5">
+          <div className="glass-card rounded-card p-5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] uppercase tracking-widest text-muted dark:text-dark-muted font-mono">
                 {CARDS.find((c) => c.id === callType)?.title}
@@ -173,12 +174,12 @@ export default function Home() {
               placeholder={"[Coach]: What would you like to achieve?\n[Client]: I want to grow my team."}
               rows={14}
               className="
-                w-full rounded-xl border border-line dark:border-dark-line
-                bg-paper dark:bg-dark-paper
+                w-full rounded-xl border border-line/50 dark:border-dark-line/50
+                bg-paper/50 dark:bg-dark-paper/50
                 px-4 py-3 font-mono text-sm
                 text-ink dark:text-dark-ink
                 placeholder:text-muted dark:placeholder:text-dark-muted
-                focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral/50
+                focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/40
                 resize-y transition-all
               "
             />
@@ -197,8 +198,8 @@ export default function Home() {
                 disabled={submitting}
                 className="
                   rounded-xl bg-coral text-white px-7 py-2.5 text-sm font-semibold
-                  hover:bg-coral/90 disabled:opacity-50 flex items-center gap-2.5
-                  shadow-md shadow-coral/20 transition-all
+                  hover:bg-coral/90 hover:shadow-glow disabled:opacity-50 flex items-center gap-2.5
+                  shadow-md shadow-coral/15 transition-all duration-200
                 "
               >
                 {submitting && (

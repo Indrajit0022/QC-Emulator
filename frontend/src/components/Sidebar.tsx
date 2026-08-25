@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 
-// ── Persistence helpers ────────────────────────────────────────────────
 function loadCollapsed(): boolean {
   try { return localStorage.getItem("qc-sidebar-collapsed") === "true"; } catch { return false; }
 }
@@ -12,65 +11,55 @@ function saveCollapsed(v: boolean) {
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(loadCollapsed);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { isDark, toggle: toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => { saveCollapsed(collapsed); }, [collapsed]);
 
-  // Handle search submit
   function handleSearchSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (search.trim()) {
-      navigate(`/evaluations?q=${encodeURIComponent(search.trim())}`);
-    } else {
-      navigate("/evaluations");
-    }
+    navigate(search.trim() ? `/evaluations?q=${encodeURIComponent(search.trim())}` : "/evaluations");
+    setMobileOpen(false);
   }
 
-  return (
-    <aside
-      className={`
-        hidden md:flex flex-col shrink-0 border-r border-line dark:border-dark-line
-        bg-card dark:bg-dark-card sidebar-transition overflow-hidden
-        ${collapsed ? "w-[60px]" : "w-60"}
-      `}
-    >
-      {/* ── Brand + Collapse toggle ─────────────────────────────── */}
-      <div className={`flex items-center border-b border-line dark:border-dark-line h-14
-        ${collapsed ? "justify-center px-0" : "px-4 justify-between"}`}
+  function handleNavClick() { setMobileOpen(false); }
+
+  const navContent = (
+    <>
+      {/* Brand */}
+      <div className={`flex items-center border-b border-line/50 dark:border-dark-line/50 h-14
+        ${collapsed && !mobileOpen ? "justify-center px-0" : "px-4 justify-between"}`}
       >
-        {!collapsed && (
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-8 w-8 rounded-lg bg-coral flex items-center justify-center text-white text-[11px] font-bold tracking-wide shrink-0">
-              QC
-            </div>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-coral to-[#c43939] flex items-center justify-center text-white text-[11px] font-bold tracking-wide shrink-0 shadow-sm">
+            QC
+          </div>
+          {(!collapsed || mobileOpen) && (
             <span className="text-[14px] font-semibold text-ink dark:text-dark-ink truncate">
               Evaluator
             </span>
-          </div>
+          )}
+        </div>
+        {!mobileOpen && (
+          <button
+            onClick={() => setCollapsed((c) => !c)}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`
+              h-7 w-7 rounded-lg flex items-center justify-center
+              text-muted hover:text-ink dark:text-dark-muted dark:hover:text-dark-ink
+              hover:bg-paper/80 dark:hover:bg-dark-surface/80 transition-colors shrink-0
+              ${collapsed ? "absolute left-[14px] top-[54px] z-10 glass-card shadow-sm" : ""}
+            `}
+          >
+            <CollapseIcon collapsed={collapsed} />
+          </button>
         )}
-        {collapsed && (
-          <div className="h-8 w-8 rounded-lg bg-coral flex items-center justify-center text-white text-[11px] font-bold tracking-wide">
-            QC
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className={`
-            h-7 w-7 rounded-lg flex items-center justify-center
-            text-muted hover:text-ink dark:text-dark-muted dark:hover:text-dark-ink
-            hover:bg-paper dark:hover:bg-dark-surface transition-colors shrink-0
-            ${collapsed ? "absolute left-[14px] top-[54px] z-10 bg-card dark:bg-dark-card border border-line dark:border-dark-line shadow-sm" : ""}
-          `}
-        >
-          <CollapseIcon collapsed={collapsed} />
-        </button>
       </div>
 
-      {/* ── Search bar (expanded only) ─────────────────────────── */}
-      {!collapsed && (
+      {/* Search (expanded/mobile) */}
+      {(!collapsed || mobileOpen) && (
         <div className="px-3 pt-3 pb-1">
           <form onSubmit={handleSearchSubmit}>
             <div className="relative">
@@ -87,12 +76,12 @@ export default function Sidebar() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search evaluations…"
                 className="
-                  w-full pl-8 pr-3 py-1.5 text-xs rounded-lg
-                  bg-paper dark:bg-dark-surface
-                  border border-line dark:border-dark-line
+                  w-full pl-8 pr-3 py-1.5 text-xs rounded-xl
+                  bg-paper/60 dark:bg-dark-surface/60
+                  border border-line/60 dark:border-dark-line/60
                   text-ink dark:text-dark-ink
                   placeholder:text-muted dark:placeholder:text-dark-muted
-                  focus:outline-none focus:ring-2 focus:ring-coral/30 focus:border-coral/50
+                  focus:outline-none focus:ring-2 focus:ring-coral/20 focus:border-coral/40
                   transition-all
                 "
               />
@@ -101,57 +90,111 @@ export default function Sidebar() {
         </div>
       )}
 
-      {/* ── Nav items ──────────────────────────────────────────── */}
-      <nav className={`mt-2 flex-1 ${collapsed ? "px-1.5" : "px-3"}`}>
-        <NavItem to="/" label="Run evaluation" icon={PlayIcon} collapsed={collapsed} end />
-        <NavItem to="/evaluations" label="Evaluations" icon={ListIcon} collapsed={collapsed} />
+      {/* Nav */}
+      <nav className={`mt-2 flex-1 ${collapsed && !mobileOpen ? "px-1.5" : "px-3"}`}>
+        <NavItem to="/" label="Run evaluation" icon={PlayIcon} collapsed={collapsed && !mobileOpen} end onClick={handleNavClick} />
+        <NavItem to="/evaluations" label="Evaluations" icon={ListIcon} collapsed={collapsed && !mobileOpen} onClick={handleNavClick} />
       </nav>
 
-      {/* ── Bottom: Dark mode toggle ────────────────────────────── */}
-      <div className={`border-t border-line dark:border-dark-line py-3 ${collapsed ? "px-1.5" : "px-3"}`}>
+      {/* Theme toggle */}
+      <div className={`border-t border-line/50 dark:border-dark-line/50 py-3 ${collapsed && !mobileOpen ? "px-1.5" : "px-3"}`}>
         <button
           onClick={toggleTheme}
           title={isDark ? "Switch to light mode" : "Switch to dark mode"}
           className={`
-            w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors
+            w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors
             text-muted dark:text-dark-muted
-            hover:bg-paper dark:hover:bg-dark-surface hover:text-ink dark:hover:text-dark-ink
-            ${collapsed ? "justify-center px-0" : ""}
+            hover:bg-paper/80 dark:hover:bg-dark-surface/80 hover:text-ink dark:hover:text-dark-ink
+            ${collapsed && !mobileOpen ? "justify-center px-0" : ""}
           `}
         >
           {isDark ? <SunIcon className="h-4 w-4 shrink-0" /> : <MoonIcon className="h-4 w-4 shrink-0" />}
-          {!collapsed && (
+          {(!collapsed || mobileOpen) && (
             <span className="text-xs font-medium">
               {isDark ? "Light mode" : "Dark mode"}
             </span>
           )}
         </button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside
+        className={`
+          hidden md:flex flex-col shrink-0 border-r border-line/40 dark:border-dark-line/40
+          glass-sidebar sidebar-transition overflow-hidden
+          ${collapsed ? "w-[60px]" : "w-60"}
+        `}
+      >
+        {navContent}
+      </aside>
+
+      {/* Mobile header bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 h-12 flex items-center px-4 gap-3 glass-sidebar border-b border-line/40 dark:border-dark-line/40">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="h-8 w-8 rounded-lg flex items-center justify-center text-ink dark:text-dark-ink hover:bg-line/30 dark:hover:bg-dark-line/30"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+          </svg>
+        </button>
+        <div className="h-7 w-7 rounded-lg bg-gradient-to-br from-coral to-[#c43939] flex items-center justify-center text-white text-[10px] font-bold">
+          QC
+        </div>
+        <span className="text-sm font-semibold text-ink dark:text-dark-ink">Evaluator</span>
+
+        <div className="ml-auto">
+          <button
+            onClick={toggleTheme}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-muted dark:text-dark-muted hover:text-ink dark:hover:text-dark-ink"
+          >
+            {isDark ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile overlay + drawer */}
+      {mobileOpen && (
+        <>
+          <div
+            className="md:hidden fixed inset-0 z-40 bg-ink/30 dark:bg-black/50 mobile-overlay"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="md:hidden fixed inset-y-0 left-0 z-50 w-64 flex flex-col glass-sidebar border-r border-line/40 dark:border-dark-line/40 shadow-xl slide-in-left">
+            {navContent}
+          </aside>
+        </>
+      )}
+    </>
   );
 }
 
-// ── NavItem ────────────────────────────────────────────────────────────
 function NavItem({
-  to, label, icon: Icon, end, collapsed,
+  to, label, icon: Icon, end, collapsed, onClick,
 }: {
   to: string;
   label: string;
   icon: (p: { className?: string }) => JSX.Element;
   end?: boolean;
   collapsed?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <NavLink
       to={to}
       end={end}
       title={collapsed ? label : undefined}
+      onClick={onClick}
       className={({ isActive }) =>
-        `flex items-center gap-3 py-2.5 rounded-lg text-sm mb-1 transition-colors
+        `flex items-center gap-3 py-2.5 rounded-xl text-sm mb-1 transition-all
         ${collapsed ? "justify-center px-0 w-full" : "px-3"}
         ${isActive
-          ? "bg-coral-bg dark:bg-dark-coral-bg text-coral dark:text-dark-coral-text font-medium"
-          : "text-muted dark:text-dark-muted hover:bg-paper dark:hover:bg-dark-surface hover:text-ink dark:hover:text-dark-ink"
+          ? "bg-coral/10 dark:bg-coral/10 text-coral dark:text-dark-coral-text font-medium shadow-sm"
+          : "text-muted dark:text-dark-muted hover:bg-paper/80 dark:hover:bg-dark-surface/80 hover:text-ink dark:hover:text-dark-ink"
         }`
       }
     >
@@ -161,7 +204,6 @@ function NavItem({
   );
 }
 
-// ── Icons ──────────────────────────────────────────────────────────────
 function CollapseIcon({ collapsed }: { collapsed: boolean }) {
   return (
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

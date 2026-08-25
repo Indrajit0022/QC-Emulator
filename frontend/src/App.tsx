@@ -11,7 +11,7 @@ export default function App() {
       <BrowserRouter>
         <div className="min-h-screen bg-paper dark:bg-dark-paper text-ink dark:text-dark-ink flex transition-colors duration-200">
           <Sidebar />
-          <main className="flex-1 min-w-0 overflow-x-hidden">
+          <main className="flex-1 min-w-0 overflow-x-hidden pt-12 md:pt-0">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/evaluations" element={<Evaluations />} />
