@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import type { DimensionRow, RunRow } from "../types";
+import { Link } from "react-router-dom";
 import ProcessingView from "../components/ProcessingView";
 import CompletedReport from "../components/CompletedReport";
 import ErrorView from "../components/ErrorView";
@@ -55,15 +56,22 @@ export default function RunPage() {
 
   if (notFound) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-16">
+      <div className="mx-auto max-w-2xl px-6 md:px-10 py-16">
         <p className="text-ink">No evaluation found at this URL.</p>
+        <Link
+          to="/"
+          className="mt-4 inline-block text-sm font-medium rounded-full bg-ink text-paper px-4 py-2 hover:bg-ink/90"
+        >
+          Back to home
+        </Link>
       </div>
     );
   }
   if (!run) {
     return (
-      <div className="mx-auto max-w-2xl px-6 py-16">
-        <p className="text-muted">Loading…</p>
+      <div className="mx-auto max-w-2xl px-6 md:px-10 py-16">
+        <div className="h-4 w-32 shimmer rounded mb-3" />
+        <div className="h-3 w-full shimmer rounded" />
       </div>
     );
   }

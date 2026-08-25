@@ -4,11 +4,16 @@
 // server round-trip or second LLM call involved.
 import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer";
 import type { DimensionRow, RunRow } from "../types";
+import { clientNameForFilename } from "./clientName";
 
 const styles = StyleSheet.create({
   page: { padding: 32, fontSize: 10, fontFamily: "Helvetica" },
-  h1: { fontSize: 20, marginBottom: 4 },
-  grade: { fontSize: 12, marginBottom: 16, color: "#639922" },
+  header: { marginBottom: 16, borderBottom: "1pt solid #E5E7EB", paddingBottom: 12 },
+  eyebrow: { fontSize: 8, color: "#6B7280", textTransform: "uppercase", letterSpacing: 1 },
+  clientName: { fontSize: 22, marginTop: 4, color: "#1C2331" },
+  scoreRow: { flexDirection: "row", alignItems: "center", marginTop: 8 },
+  score: { fontSize: 14, color: "#1C2331" },
+  grade: { fontSize: 10, color: "#639922", marginLeft: 10 },
   sectionTitle: {
     fontSize: 9,
     textTransform: "uppercase",
@@ -17,20 +22,34 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     marginTop: 14,
   },
-  body: { fontSize: 10, lineHeight: 1.4 },
-  dimHeader: { fontSize: 11, fontWeight: 700, marginTop: 10 },
+  body: { fontSize: 10, lineHeight: 1.4, color: "#1C2331" },
+  dimHeader: { fontSize: 11, marginTop: 10, color: "#1C2331" },
   quote: { fontSize: 9, color: "#1C2331", marginBottom: 2 },
 });
 
-function ReportDoc({ run, dimensions }: { run: RunRow; dimensions: DimensionRow[] }) {
+function ReportDoc({
+  run,
+  dimensions,
+  client,
+}: {
+  run: RunRow;
+  dimensions: DimensionRow[];
+  client: string;
+}) {
   const report = run.report;
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.h1}>
-          {run.total_score} / {run.max_score}
-        </Text>
-        <Text style={styles.grade}>{run.grade}</Text>
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>{run.call_type} call evaluation</Text>
+          <Text style={styles.clientName}>{client}</Text>
+          <View style={styles.scoreRow}>
+            <Text style={styles.score}>
+              Score: {run.total_score} / {run.max_score}
+            </Text>
+            <Text style={styles.grade}>{run.grade}</Text>
+          </View>
+        </View>
 
         {report && (
           <>
@@ -49,6 +68,17 @@ function ReportDoc({ run, dimensions }: { run: RunRow; dimensions: DimensionRow[
                   • {f}
                 </Text>
               ))
+            )}
+
+            {report.caps_applied.length > 0 && (
+              <>
+                <Text style={styles.sectionTitle}>Rubric Caps Applied</Text>
+                {report.caps_applied.map((c, i) => (
+                  <Text key={i} style={styles.body}>
+                    • {c}
+                  </Text>
+                ))}
+              </>
             )}
           </>
         )}
@@ -75,12 +105,18 @@ function ReportDoc({ run, dimensions }: { run: RunRow; dimensions: DimensionRow[
   );
 }
 
-export async function downloadReportPdf(run: RunRow, dimensions: DimensionRow[]) {
-  const blob = await pdf(<ReportDoc run={run} dimensions={dimensions} />).toBlob();
+export async function downloadReportPdf(
+  run: RunRow,
+  dimensions: DimensionRow[],
+  client: string,
+) {
+  const blob = await pdf(
+    <ReportDoc run={run} dimensions={dimensions} client={client} />,
+  ).toBlob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `call-evaluation-${run.id.slice(0, 8)}.pdf`;
+  a.download = `${clientNameForFilename(client)}.pdf`;
   a.click();
   URL.revokeObjectURL(url);
 }
