@@ -18,7 +18,7 @@ export default function ErrorView({ run }: { run: RunRow }) {
       </div>
 
       {/* Error hero */}
-      <div className="bg-card dark:bg-dark-card border border-coral/20 rounded-card p-8 mb-6">
+      <div className="glass-card !border-coral/20 rounded-card p-8 mb-6">
         <div className="h-12 w-12 rounded-full bg-coral-bg dark:bg-dark-coral-bg flex items-center justify-center mb-4">
           <svg className="h-6 w-6 text-coral" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
@@ -28,7 +28,7 @@ export default function ErrorView({ run }: { run: RunRow }) {
         <h1 className="text-xl font-semibold text-ink dark:text-dark-ink">Evaluation failed</h1>
         <p className="mt-1 text-sm text-muted dark:text-dark-muted">We couldn't complete this evaluation.</p>
 
-        <div className="mt-5 bg-paper dark:bg-dark-paper border border-line dark:border-dark-line rounded-xl p-4">
+        <div className="mt-5 bg-paper/60 dark:bg-dark-paper/60 backdrop-blur-sm border border-line/30 dark:border-dark-line/30 rounded-xl p-4">
           <p className="text-xs uppercase tracking-widest text-muted dark:text-dark-muted mb-1.5">Error details</p>
           <p className="font-mono text-sm text-ink dark:text-dark-ink break-all">
             {run.error ?? "Unknown error."}
